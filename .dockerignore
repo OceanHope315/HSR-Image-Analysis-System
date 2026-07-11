@@ -1,0 +1,39 @@
+# Dependency and build output
+node_modules
+**/node_modules
+dist
+**/dist
+coverage
+**/coverage
+
+# Local configuration and secrets (examples remain included)
+.env
+**/.env
+.env.*
+**/.env.*
+!.env.example
+!**/.env.example
+
+# Runtime data, logs and editor metadata
+uploads
+**/uploads/*
+!**/uploads/**/.gitkeep
+logs
+**/*.log
+.git
+.gitignore
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# Test/cache data and large model artefacts
+**/.cache
+**/.vitest
+**/tmp
+**/temp
+**/*.pt
+**/*.onnx
+**/*.engine
+**/runs
+**/datasets

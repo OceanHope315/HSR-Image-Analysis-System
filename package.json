@@ -1,0 +1,31 @@
+{
+  "name": "railway-security-decision-system",
+  "version": "1.0.0",
+  "private": true,
+  "description": "铁路安检判图辅助决策系统（模拟软件原型）",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "install:all": "npm install --workspaces --include-workspace-root",
+    "dev": "concurrently --kill-others-on-fail --names backend,frontend \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "npm run dev --workspace backend",
+    "dev:frontend": "npm run dev --workspace frontend",
+    "start": "npm run start --workspace backend",
+    "build": "npm run build --workspace frontend",
+    "test": "npm run test --workspace backend && npm run test --workspace frontend",
+    "lint": "npm run lint --workspaces --if-present",
+    "smoke": "node scripts/smoke.mjs",
+    "seed": "npm run seed --workspace backend",
+    "migrate": "npm run migrate --workspace backend",
+    "create-admin": "npm run create-admin --workspace backend"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.3"
+  }
+}

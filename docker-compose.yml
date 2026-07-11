@@ -1,0 +1,83 @@
+services:
+  mongodb:
+    image: mongo:8.0
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  mongodb-init:
+    image: mongo:8.0
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    restart: "no"
+    entrypoint: ["/bin/sh", "-c"]
+    command: >-
+      mongosh --host mongodb:27017 --quiet --eval
+      'try { rs.status().ok } catch (error) { rs.initiate({_id:"rs0",members:[{_id:0,host:"mongodb:27017"}]}) }'
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      mongodb-init:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      MONGO_URI: mongodb://mongodb:27017/railway_security?replicaSet=rs0
+      JWT_SECRET: ${JWT_SECRET:?请在项目根目录的 .env 中设置 JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-8h}
+      CLIENT_ORIGIN: ${CLIENT_ORIGIN:-http://localhost:5174}
+      SOCKET_CORS_ORIGIN: ${SOCKET_CORS_ORIGIN:-http://localhost:5174}
+      UPLOAD_DIR: uploads/xrays
+      MAX_UPLOAD_SIZE: ${MAX_UPLOAD_SIZE:-5242880}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      TRANSACTION_MODE: required
+      SIMULATION_ENABLED: ${SIMULATION_ENABLED:-true}
+      DEVICE_OFFLINE_AFTER_SECONDS: ${DEVICE_OFFLINE_AFTER_SECONDS:-90}
+    ports:
+      - "5000:5000"
+    volumes:
+      - backend_uploads:/app/backend/uploads
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:5000/api/v1/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        VITE_API_BASE_URL: /api/v1
+        VITE_SOCKET_URL: ""
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "5174:80"
+
+volumes:
+  mongodb_data:
+  backend_uploads:
