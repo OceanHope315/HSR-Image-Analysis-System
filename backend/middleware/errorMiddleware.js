@@ -23,6 +23,11 @@ export function errorMiddleware(error, req, res, _next) {
     );
   } else if (error instanceof multer.MulterError) {
     normalized = new AppError(400, 'UPLOAD_ERROR', error.code === 'LIMIT_FILE_SIZE' ? '图片超过大小限制' : '图片上传失败');
+  } else if (
+    ['MongoServerSelectionError', 'MongooseServerSelectionError', 'MongoNetworkError'].includes(error?.name)
+    || /before initial connection is complete|client must be connected/i.test(error?.message ?? '')
+  ) {
+    normalized = new AppError(503, 'DATABASE_UNAVAILABLE', '数据库当前不可用，检测记录尚未保存');
   }
 
   const statusCode = normalized.statusCode ?? 500;
@@ -33,6 +38,7 @@ export function errorMiddleware(error, req, res, _next) {
   );
   res.status(statusCode).json({
     success: false,
+    message: operational ? normalized.message : '服务器内部错误',
     error: {
       code: normalized.code ?? 'INTERNAL_ERROR',
       message: operational ? normalized.message : '服务器内部错误',

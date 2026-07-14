@@ -686,3 +686,15 @@ Invoke-RestMethod -Uri 'http://localhost:5000/api/v1/inspections?riskLevel=high&
 - Socket 广播给所有已认证角色，未按站点/资源做房间隔离。
 
 这些限制不能被描述为已解决；生产化建议见 `DEPLOYMENT.md`，代码学习说明见 `LEARNING_NOTES.md`。
+# 智能检测与气体通信（新增）
+
+完整启动、字段语义和验收流程见 [YOLO_GAS_INTEGRATION.md](./YOLO_GAS_INTEGRATION.md)。新增接口如下，原接口保持兼容：
+
+- `GET /api/v1/detections/status`：无需登录，返回 YOLO、模型加载/计算设备、气体通信和数据库状态。
+- `POST /api/v1/detections/image`：`admin/inspector`，multipart 字段为 `image`（真实视觉必填）、`packageId`、`timestamp`、`deviceId`、`visionMode`、`gasMode`、`visionSimulationData`（JSON）、`gasSimulationData`（JSON）。成功后仍返回 `inspection/alarm/transaction`。
+- `GET /api/v1/gas/status`：返回 `online/offline/timeout`、最后有效帧时间和通道状态。
+- `GET /api/v1/gas/latest`：返回最新气体快照；参考 TCP 协议没有浓度时 `concentration/unit` 为 `null`。
+- `POST /api/v1/gas/readings`：`admin/inspector`，供 HTTP 通信适配器推送经过校验的数据。
+- `POST /api/v1/gas/clear-alarm`：`admin/inspector`，向在线 TCP 设备发送解除报警命令。
+
+常见新增错误码：`YOLO_SERVICE_OFFLINE`、`YOLO_SERVICE_TIMEOUT`、`YOLO_MODEL_NOT_LOADED`、`GAS_DEVICE_OFFLINE`、`GAS_COMMAND_FAILED`、`DATABASE_UNAVAILABLE`、`DUPLICATE_IMAGE`、`DETECTION_IN_PROGRESS`。

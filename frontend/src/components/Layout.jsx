@@ -58,8 +58,8 @@ export default function Layout() {
           ))}
         </nav>
         <div className="sidebar-foot">
-          <div className="simulation-label"><span>SIM</span> 模拟数据环境</div>
-          <p>本系统仅用于软件开发与功能演示，不具备真实安检能力。</p>
+          <div className="simulation-label"><span>HYBRID</span> 真实 / 模拟双模式</div>
+          <p>支持模型与气体通信接入；所有结论仍需由安检人员现场复核。</p>
         </div>
       </aside>
 
@@ -84,8 +84,8 @@ export default function Layout() {
         </header>
 
         <div className="simulation-banner">
-          <strong>模拟环境</strong>
-          当前数据为模拟数据，仅用于系统开发和功能演示；所有风险结论均需由安检人员复核。
+          <strong>运行提示</strong>
+          检测可使用真实服务或模拟数据；无论来源如何，所有风险结论均需由安检人员复核。
         </div>
 
         <main className="content"><Outlet /></main>

@@ -9,6 +9,7 @@ fs.mkdirSync(env.uploadDir, { recursive: true });
 const allowed = new Map([
   ['image/jpeg', '.jpg'],
   ['image/png', '.png'],
+  ['image/bmp', '.bmp'],
   ['image/webp', '.webp'],
   ['image/gif', '.gif'],
 ]);
@@ -26,11 +27,11 @@ export const uploadXray = multer({
   limits: { fileSize: env.maxUploadSize, files: 1 },
   fileFilter: (_req, file, callback) => {
     if (!allowed.has(file.mimetype)) {
-      callback(new AppError(400, 'UPLOAD_TYPE_NOT_ALLOWED', '仅允许 JPG、PNG、WEBP 或 GIF 图片'));
+      callback(new AppError(400, 'UPLOAD_TYPE_NOT_ALLOWED', '仅允许 JPG、PNG、BMP、WEBP 或 GIF 图片'));
       return;
     }
     const originalExtension = path.extname(path.basename(file.originalname)).toLowerCase();
-    if (!['.jpg', '.jpeg', '.png', '.webp', '.gif'].includes(originalExtension)) {
+    if (!['.jpg', '.jpeg', '.png', '.bmp', '.webp', '.gif'].includes(originalExtension)) {
       callback(new AppError(400, 'UPLOAD_TYPE_NOT_ALLOWED', '文件扩展名与图片类型不匹配'));
       return;
     }
@@ -43,11 +44,21 @@ function matchesMagic(buffer, mimetype) {
   if (mimetype === 'image/png') {
     return buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
   }
+  if (mimetype === 'image/bmp') return buffer.subarray(0, 2).toString('ascii') === 'BM';
   if (mimetype === 'image/gif') return ['GIF87a', 'GIF89a'].includes(buffer.subarray(0, 6).toString('ascii'));
   if (mimetype === 'image/webp') {
     return buffer.subarray(0, 4).toString('ascii') === 'RIFF' && buffer.subarray(8, 12).toString('ascii') === 'WEBP';
   }
   return false;
+}
+
+export function cleanupRejectedUpload(req, res, next) {
+  res.once('finish', () => {
+    if (req.file && !req.uploadCommitted && res.statusCode >= 400) {
+      fs.promises.unlink(req.file.path).catch(() => undefined);
+    }
+  });
+  next();
 }
 
 export async function validateUploadedImage(req, _res, next) {

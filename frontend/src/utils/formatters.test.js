@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   alarmStatusLabel,
+  detectionClassLabel,
   formatDateTime,
+  formatNumber,
   formatPercent,
   normalizeList,
   objectId,
@@ -18,6 +20,13 @@ describe('前端展示工具', () => {
   it('兼容 0-1 和 0-100 两种置信度', () => {
     expect(formatPercent(0.91)).toBe('91%');
     expect(formatPercent(91)).toBe('91%');
+  });
+
+  it('显示目标中文名，并让空数值安全降级', () => {
+    expect(detectionClassLabel('lighter')).toBe('打火机');
+    expect(detectionClassLabel('pressure_agnostic')).toBe('压力容器');
+    expect(formatNumber(null, 2)).toBe('—');
+    expect(formatPercent(undefined)).toBe('—');
   });
 
   it('对非法日期和列表安全降级', () => {

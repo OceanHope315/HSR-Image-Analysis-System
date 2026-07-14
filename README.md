@@ -515,7 +515,8 @@ db.inspectionrecords.find({ riskLevel: "high" })
 
 ## 当前限制
 
-- 只提供模拟视觉、气体和心跳，不具备真实安检能力；
+- 已支持本地 YOLO 服务和参考气体 TCP 协议，同时保留完整模拟回退；接入与验收见 [YOLO_GAS_INTEGRATION.md](./YOLO_GAS_INTEGRATION.md)；
+- 参考气体协议只提供通道连接与报警等级，不提供真实浓度；
 - 风险阈值是可解释演示规则，尚未由真实数据或行业专家标定；
 - 本地文件上传适合单机演示，多实例部署需要受控共享存储方案；
 - JWT 采用前端保存并在退出时清除的方案，没有服务端 Token 吊销列表；
@@ -525,6 +526,7 @@ db.inspectionrecords.find({ riskLevel: "high" })
 
 ## 继续学习
 
+- [YOLO_GAS_INTEGRATION.md](./YOLO_GAS_INTEGRATION.md)：YOLO、气体 TCP、图形界面、启动与验收步骤；
 - [LEARNING_NOTES.md](./LEARNING_NOTES.md)：按“一次请求如何穿过前端、后端和数据库”的顺序讲解 28 个主题；
 - [API_DOCUMENTATION.md](./API_DOCUMENTATION.md)：端点、权限、参数、响应和状态码；
 - [COURSE_CHECKLIST.md](./COURSE_CHECKLIST.md)：原有、本次新增、尚未实现和可选增强；

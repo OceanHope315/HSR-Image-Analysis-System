@@ -49,6 +49,8 @@ const highEvidence = {
   xrayResult: [{ ...safeDetection, className: 'knife', confidence: 0.96 }],
   gasSensor: {
     gasType: 'combustible', concentration: 250, unit: 'ppm', alarm: true, trend: 'rising', sensorStatus: 'online', collectedAt: new Date().toISOString(),
+    connectionStatus: 'online', source: 'device', alarmLevel: 2,
+    channels: [{ channel: 1, connected: true, alarmLevel: 2, alarmText: '二级报警' }],
   },
 };
 
@@ -247,5 +249,33 @@ describe('模拟接口与安全图片上传', () => {
     expect(valid.status).toBe(201);
     uploadedFiles.push(path.join(env.uploadDir, valid.body.data.filename));
     await expect(fs.stat(uploadedFiles[0])).resolves.toBeTruthy();
+  });
+
+  it('全模拟智能检测沿用统一风险、保存与图片链路', async () => {
+    const token = await login('inspector');
+    const bmpHeader = Buffer.from([0x42, 0x4d, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    const response = await request(app)
+      .post('/api/v1/detections/image')
+      .set(auth(token))
+      .field('packageId', 'SMART-SIM-001')
+      .field('timestamp', new Date().toISOString())
+      .field('visionMode', 'simulation')
+      .field('gasMode', 'simulation')
+      .field('visionSimulationData', JSON.stringify([{ ...safeDetection, className: 'lighter' }]))
+      .field('gasSimulationData', JSON.stringify({
+        gasType: 'combustible', concentration: 20, unit: 'ppm', alarm: false,
+        trend: 'stable', sensorStatus: 'online',
+      }))
+      .attach('image', bmpHeader, { filename: 'xray.bmp', contentType: 'image/bmp' });
+    expect(response.status).toBe(201);
+    expect(response.body.data.inspection).toMatchObject({
+      packageId: 'SMART-SIM-001',
+      source: 'simulation',
+      sourceMode: { vision: 'simulation', gas: 'simulation' },
+      serviceStatus: { yolo: 'simulation', gas: 'simulation' },
+    });
+    const imageUrl = response.body.data.inspection.xrayImageUrl;
+    uploadedFiles.push(path.join(env.uploadDir, decodeURIComponent(imageUrl.split('/').at(-1))));
+    await expect(fs.stat(uploadedFiles.at(-1))).resolves.toBeTruthy();
   });
 });

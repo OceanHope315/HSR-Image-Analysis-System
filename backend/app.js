@@ -6,10 +6,13 @@ import pinoHttp from 'pino-http';
 import { env } from './config/env.js';
 import { logger } from './config/logger.js';
 import { errorMiddleware, notFoundMiddleware } from './middleware/errorMiddleware.js';
+import { requireDatabase } from './middleware/databaseMiddleware.js';
 import alarmRoutes from './routes/alarmRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
+import detectionRoutes from './routes/detectionRoutes.js';
 import deviceRoutes from './routes/deviceRoutes.js';
+import gasRoutes from './routes/gasRoutes.js';
 import inspectionRoutes from './routes/inspectionRoutes.js';
 import logRoutes from './routes/logRoutes.js';
 import simulationRoutes from './routes/simulationRoutes.js';
@@ -40,6 +43,9 @@ app.use('/uploads/xrays', express.static(path.resolve(env.uploadDir), {
   dotfiles: 'deny',
   maxAge: env.isProduction ? '1d' : 0,
 }));
+app.use('/api/v1/detections', detectionRoutes);
+app.use('/api/v1/gas', gasRoutes);
+app.use('/api/v1', requireDatabase);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/inspections', inspectionRoutes);
 app.use('/api/v1/alarms', alarmRoutes);

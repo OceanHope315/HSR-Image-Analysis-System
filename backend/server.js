@@ -6,15 +6,30 @@ import { connectDatabase, disconnectDatabase } from './config/db.js';
 import { assertRuntimeSecrets, env } from './config/env.js';
 import { logger } from './config/logger.js';
 import { User } from './models/User.js';
+import { startSensorCommunication, stopSensorCommunication } from './services/sensorAdapterService.js';
 import { setSocketServer } from './utils/socket.js';
 
 let httpServer;
 let io;
 let shuttingDown = false;
+let databaseRetryTimer;
+
+async function connectDatabaseWithRetry() {
+  try {
+    await connectDatabase();
+  } catch (error) {
+    logger.error({ err: error }, 'MongoDB 暂不可用，后端将以降级状态启动并自动重试');
+    if (!shuttingDown) {
+      databaseRetryTimer = setTimeout(connectDatabaseWithRetry, env.databaseRetryDelayMs);
+      databaseRetryTimer.unref?.();
+    }
+  }
+}
 
 async function start() {
   assertRuntimeSecrets();
-  await connectDatabase();
+  await connectDatabaseWithRetry();
+  startSensorCommunication();
   httpServer = http.createServer(app);
   const origins = env.socketCorsOrigin.split(',').map((item) => item.trim()).filter(Boolean);
   io = new SocketServer(httpServer, {
@@ -48,6 +63,8 @@ async function shutdown(signal, exitCode = 0) {
   logger.info({ signal }, '正在优雅关闭服务');
   const forceTimer = setTimeout(() => process.exit(1), 10_000);
   forceTimer.unref();
+  clearTimeout(databaseRetryTimer);
+  stopSensorCommunication();
   if (io) await new Promise((resolve) => io.close(resolve));
   if (httpServer?.listening) {
     await new Promise((resolve) => httpServer.close(resolve));

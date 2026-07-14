@@ -19,6 +19,30 @@ const deviceStatusMap = {
   maintenance: '维护中',
 };
 const roleMap = { admin: '管理员', inspector: '安检员', viewer: '只读人员' };
+const detectionClassMap = {
+  gun: '枪支',
+  firearm: '枪支',
+  explosive: '爆炸物',
+  bomb: '爆炸物',
+  knife: '刀具',
+  gongju_agnostic: '工具类物品',
+  knife_agnostic: '疑似刀具',
+  pressure_agnostic: '压力容器',
+  pressure_can: '压力容器',
+  aerosol: '压力容器',
+  scissor: '剪刀',
+  powerbank: '充电宝',
+  bottle: '瓶装液体',
+  lighter: '打火机',
+  liquid: '液体',
+  flammable_liquid: '疑似易燃液体',
+  normal_object: '普通物品',
+  umbrella: '雨伞',
+  laptop: '笔记本电脑',
+  book: '书本',
+  clothes: '衣物',
+  backpack: '背包',
+};
 
 export function formatDateTime(value, fallback = '—') {
   if (!value) return fallback;
@@ -36,6 +60,7 @@ export function formatDateTime(value, fallback = '—') {
 }
 
 export function formatNumber(value, digits = 0) {
+  if (value === null || value === undefined || value === '') return '—';
   const number = Number(value);
   if (!Number.isFinite(number)) return '—';
   return new Intl.NumberFormat('zh-CN', {
@@ -45,6 +70,7 @@ export function formatNumber(value, digits = 0) {
 }
 
 export function formatPercent(value, digits = 0) {
+  if (value === null || value === undefined || value === '') return '—';
   const number = Number(value);
   if (!Number.isFinite(number)) return '—';
   const normalized = number <= 1 ? number * 100 : number;
@@ -69,6 +95,12 @@ export function deviceStatusLabel(value) {
 
 export function roleLabel(value) {
   return roleMap[value] ?? value ?? '—';
+}
+
+export function detectionClassLabel(value, fallback = '未知类别') {
+  if (value === null || value === undefined || value === '') return fallback;
+  const normalized = String(value).trim().toLowerCase();
+  return detectionClassMap[normalized] ?? String(value);
 }
 
 export function objectId(value) {

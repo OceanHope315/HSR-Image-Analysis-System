@@ -3,6 +3,7 @@ import { env } from './env.js';
 import { logger } from './logger.js';
 
 mongoose.set('strictQuery', true);
+mongoose.set('bufferCommands', false);
 
 function databaseNameFromUri(uri) {
   const withoutQuery = String(uri).split('?')[0].replace(/\/$/, '');
@@ -11,6 +12,7 @@ function databaseNameFromUri(uri) {
 
 export async function connectDatabase(uri = env.mongoUri) {
   if (mongoose.connection.readyState === 1) return mongoose.connection;
+  if (mongoose.connection.readyState === 2) return mongoose.connection.asPromise();
   if (env.isTest && !databaseNameFromUri(uri).endsWith('_test')) {
     throw new Error(`测试模式拒绝连接非 _test 数据库：${databaseNameFromUri(uri) || '(未指定数据库)'}`);
   }

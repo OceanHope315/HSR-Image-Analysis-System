@@ -94,8 +94,8 @@ export default function InspectionsPage() {
     <div>
       <PageHeader
         title="历史检测记录"
-        description="查询、筛选并复核模拟 X 光与气体融合检测结果"
-        actions={user?.role !== 'viewer' && <Link className="button button--primary" to="/inspections/new">＋ 新增模拟检测</Link>}
+        description="查询、筛选并复核真实或模拟的视觉与气体融合检测结果"
+        actions={user?.role !== 'viewer' && <Link className="button button--primary" to="/inspections/new">＋ 开始智能检测</Link>}
       />
 
       {notice && <div className="notice notice--success" role="status">{notice}<button type="button" onClick={() => setNotice('')}>×</button></div>}
@@ -120,7 +120,7 @@ export default function InspectionsPage() {
       </form>
 
       <section className="panel table-panel">
-        {loading ? <LoadingBlock /> : error ? <ErrorBlock message={error} onRetry={loadRecords} /> : records.length === 0 ? <EmptyBlock title="没有匹配的检测记录" description="可重置筛选，或新增一条模拟检测记录。" /> : (
+        {loading ? <LoadingBlock /> : error ? <ErrorBlock message={error} onRetry={loadRecords} /> : records.length === 0 ? <EmptyBlock title="没有匹配的检测记录" description="可重置筛选，或开始一次智能检测。" /> : (
           <>
             <div className="table-wrap">
               <table>
@@ -135,7 +135,7 @@ export default function InspectionsPage() {
                       <td><strong>{formatNumber(record.riskScore)}</strong><span className="score-unit">/100</span></td>
                       <td>{gas?.alarm ? <span className="yes-alarm">是</span> : '否'}</td>
                       <td><InspectionStatusBadge status={record.status} /></td>
-                      <td>{record.source === 'simulation' || record.source === 'manual-simulation' ? '模拟数据' : record.source || '—'}</td>
+                      <td>{record.sourceMode ? `${record.sourceMode.vision === 'real' ? '真实 YOLO' : '视觉模拟'} · ${record.sourceMode.gas === 'device' ? '通信气体' : '气体模拟'}` : record.source === 'simulation' || record.source === 'manual-simulation' ? '模拟数据' : record.source || '—'}</td>
                       <td><div className="table-actions"><Link className="text-button" to={`/inspections/${record._id}`}>查看</Link>{user?.role === 'admin' && (record.isDeleted ? <button type="button" className="text-button" onClick={() => setConfirm({ action: 'restore', record })}>恢复</button> : <button type="button" className="text-button text-button--danger" onClick={() => setConfirm({ action: 'delete', record })}>删除</button>)}</div></td>
                     </tr>
                   );

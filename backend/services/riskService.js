@@ -30,6 +30,9 @@ export function calculateRisk(input = {}) {
     visualEvidence = true;
     const confidenceFactor = 0.5 + confidence * 0.5;
     score += Math.round(rule.weight * confidenceFactor);
+    if (rule.forceHigh && confidence >= riskRules.confidence.high) {
+      score = Math.max(score, riskRules.thresholds.high);
+    }
     reasons.push(`检测到疑似${rule.label}，置信度 ${confidence.toFixed(2)}`);
   }
 
@@ -41,8 +44,14 @@ export function calculateRisk(input = {}) {
   }
 
   if (sensorAvailable) {
-    const concentration = Number(sensor.concentration);
-    if (Number.isFinite(concentration) && concentration >= 0) {
+    const alarmingChannels = Array.isArray(sensor.channels)
+      ? sensor.channels.filter((channel) => channel?.connected && Number(channel?.alarmLevel) > 0)
+      : [];
+    const hasConcentration = sensor.concentration !== null
+      && sensor.concentration !== undefined
+      && sensor.concentration !== '';
+    const concentration = hasConcentration ? Number(sensor.concentration) : null;
+    if (hasConcentration && Number.isFinite(concentration) && concentration >= 0) {
       const threshold = gasThreshold(sensor);
       if (concentration >= threshold * 2) {
         score += riskRules.gas.extremeConcentrationWeight;
@@ -53,15 +62,22 @@ export function calculateRisk(input = {}) {
         gasEvidence = true;
         reasons.push(`${sensor.gasType ?? '气体'}浓度超过参考阈值`);
       }
-    } else {
+    } else if (hasConcentration) {
       score += 10;
       reasons.push('气体浓度数据无效，已按数据不足处理');
+    } else {
+      reasons.push('气体设备协议未提供浓度值，当前仅依据通道状态和报警等级判断');
     }
-    if (sensor.alarm === true) {
+    if (sensor.alarm === true || alarmingChannels.length > 0) {
       score += riskRules.gas.alarmWeight;
+      score = Math.max(score, riskRules.gas.alarmMinimumScore);
       gasEvidence = true;
       reasons.push('气体传感器触发报警');
     }
+    alarmingChannels.forEach((channel) => {
+      const levelName = ['无', '一级', '二级', '三级'][Number(channel.alarmLevel)] ?? `${channel.alarmLevel}级`;
+      reasons.push(`气体通道 ${channel.channel} 触发${levelName}报警`);
+    });
     if (sensor.trend === 'rising') {
       score += riskRules.gas.risingWeight;
       reasons.push('气体浓度呈上升趋势');

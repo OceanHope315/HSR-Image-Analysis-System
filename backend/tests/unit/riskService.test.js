@@ -27,9 +27,15 @@ describe('calculateRisk', () => {
     expect(result.riskReasons.join('')).toContain('刀具');
   });
 
-  it('只有气体报警时提高风险', () => {
+  it('高置信度枪支等高危类别可单独触发 high', () => {
+    const result = calculateRisk({ xrayResult: [detection('gun', 0.92)] });
+    expect(result.riskLevel).toBe('high');
+    expect(result.riskReasons.join('')).toContain('枪支');
+  });
+
+  it('只有气体报警时按工业报警规则判为高风险', () => {
     const result = calculateRisk({ gasSensor: { ...safeSensor, alarm: true } });
-    expect(result.riskLevel).toBe('medium');
+    expect(result.riskLevel).toBe('high');
     expect(result.riskReasons).toContain('气体传感器触发报警');
   });
 

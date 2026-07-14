@@ -43,7 +43,7 @@ export default function LoginPage() {
         <div className="login-copy">
           <span className="login-kicker">多模态融合感知 · 软件原型</span>
           <h1>铁路安检判图<br />辅助决策系统</h1>
-          <p>统一呈现模拟 X 光检测、气体传感器和设备状态，帮助安检人员完成风险复核与报警处置。</p>
+          <p>统一呈现 YOLO 视觉检测、气体通信和设备状态，同时保留离线演示模式，帮助安检人员完成风险复核与报警处置。</p>
           <div className="login-principle"><strong>辅助决策，不替代人工判断</strong><span>所有结果均需由安检人员复核</span></div>
         </div>
         <div className="login-grid" aria-hidden="true" />
@@ -85,7 +85,7 @@ export default function LoginPage() {
             <strong>演示账号</strong>
             <span>请先运行初始化数据命令，账号信息会显示在命令输出中。</span>
           </div>
-          <p className="login-disclaimer">当前系统仅使用模拟数据，不连接真实安检设备、模型或传感器。</p>
+          <p className="login-disclaimer">系统支持真实服务与模拟数据；检测结果仅用于辅助决策，必须由安检人员复核。</p>
         </form>
       </section>
     </main>

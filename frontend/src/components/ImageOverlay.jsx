@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { formatPercent, resolveAssetUrl } from '../utils/formatters.js';
+import { detectionClassLabel, formatPercent, resolveAssetUrl } from '../utils/formatters.js';
 
 function toPercent(value, dimension) {
   const numeric = Number(value);
@@ -8,7 +8,13 @@ function toPercent(value, dimension) {
   return dimension > 0 ? (numeric / dimension) * 100 : 0;
 }
 
-export default function ImageOverlay({ src, detections = [] }) {
+export default function ImageOverlay({
+  src,
+  detections = [],
+  alt = '包裹 X 光检测图',
+  emptyTitle = '暂无 X 光图片',
+  emptyDescription = '设备未提供图片',
+}) {
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const url = resolveAssetUrl(src);
   const boxes = useMemo(
@@ -34,10 +40,10 @@ export default function ImageOverlay({ src, detections = [] }) {
 
   if (!url) {
     return (
-      <div className="image-placeholder" role="img" aria-label="暂无 X 光图片">
+      <div className="image-placeholder" role="img" aria-label={emptyTitle}>
         <span>▧</span>
-        <strong>暂无 X 光图片</strong>
-        <small>模拟记录可以不包含图片</small>
+        <strong>{emptyTitle}</strong>
+        <small>{emptyDescription}</small>
       </div>
     );
   }
@@ -46,12 +52,12 @@ export default function ImageOverlay({ src, detections = [] }) {
       <div className="xray-image-frame">
         <img
           src={url}
-          alt="包裹 X 光检测图"
+          alt={alt}
           onLoad={(event) => setDimensions({ width: event.currentTarget.naturalWidth, height: event.currentTarget.naturalHeight })}
         />
         {boxes.map((box) => (
           <div key={box.key} className="detection-box" style={box.style}>
-            <span>{box.className || '未知目标'} {formatPercent(box.confidence)}</span>
+            <span>{box.className ? `${box.className}（${detectionClassLabel(box.className)}）` : '未知目标'} {formatPercent(box.confidence)}</span>
           </div>
         ))}
       </div>

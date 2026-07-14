@@ -22,7 +22,7 @@ import { useRealtime } from '../context/realtime-context.js';
 import PageHeader from '../components/PageHeader.jsx';
 import { DeviceStatusBadge, RiskBadge, AlarmStatusBadge } from '../components/Badges.jsx';
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '../components/StateViews.jsx';
-import { formatDateTime, formatNumber, objectId } from '../utils/formatters.js';
+import { detectionClassLabel, formatDateTime, formatNumber, objectId } from '../utils/formatters.js';
 
 const COLORS = { high: '#d64545', medium: '#e98b2a', low: '#249b72' };
 
@@ -55,8 +55,8 @@ function normalizeTrend(value) {
 
 function normalizeTargets(summary, gas) {
   const source = summary?.dangerousTargets ?? summary?.targetStatistics ?? gas?.dangerousTargets ?? gas?.targetStatistics ?? [];
-  if (Array.isArray(source)) return source.map((item) => ({ name: item.name ?? item.className ?? item._id ?? '未知', count: item.count ?? item.value ?? 0 }));
-  return Object.entries(source || {}).map(([name, count]) => ({ name, count }));
+  if (Array.isArray(source)) return source.map((item) => ({ name: detectionClassLabel(item.name ?? item.className ?? item._id), count: item.count ?? item.value ?? 0 }));
+  return Object.entries(source || {}).map(([name, count]) => ({ name: detectionClassLabel(name), count }));
 }
 
 export default function DashboardPage() {
@@ -158,7 +158,7 @@ export default function DashboardPage() {
           <div className="panel-header"><div><h2>风险等级分布</h2><p>全部未删除检测记录</p></div></div>
           {riskData.some((item) => item.value > 0) ? (
             <div className="chart chart--pie"><ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={riskData} dataKey="value" nameKey="name" innerRadius={58} outerRadius={90} paddingAngle={3}>{riskData.map((item) => <Cell key={item.level} fill={COLORS[item.level]} />)}</Pie><Tooltip /><Legend /></PieChart></ResponsiveContainer></div>
-          ) : <EmptyBlock title="暂无风险分布" description="创建模拟检测记录后将显示统计。" />}
+          ) : <EmptyBlock title="暂无风险分布" description="完成一次智能检测后将显示统计。" />}
         </article>
         <article className="panel panel--wide">
           <div className="panel-header"><div><h2>最近七天风险趋势</h2><p>按检测日期聚合</p></div></div>
@@ -170,7 +170,7 @@ export default function DashboardPage() {
 
       <section className="dashboard-grid dashboard-grid--equal">
         <article className="panel">
-          <div className="panel-header"><div><h2>危险目标类别</h2><p>模拟 YOLO 检测结果聚合</p></div></div>
+          <div className="panel-header"><div><h2>危险目标类别</h2><p>真实与模拟视觉检测结果聚合</p></div></div>
           {errors.gas ? <ErrorBlock message={errors.gas} onRetry={() => loadDashboard()} /> : targets.length ? (
             <div className="chart chart--short"><ResponsiveContainer width="100%" height="100%"><BarChart data={targets.slice(0, 8)} layout="vertical" margin={{ left: 10, right: 20 }}><CartesianGrid strokeDasharray="3 3" stroke="#e5ebf1" /><XAxis type="number" allowDecimals={false} /><YAxis type="category" dataKey="name" width={72} tick={{ fontSize: 12 }} /><Tooltip /><Bar dataKey="count" name="数量" fill="#167f86" radius={[0, 4, 4, 0]} /></BarChart></ResponsiveContainer></div>
           ) : <EmptyBlock title="暂无危险目标" description="当前记录未检测到可统计的危险目标。" />}
@@ -188,7 +188,7 @@ export default function DashboardPage() {
       <section className="dashboard-grid dashboard-grid--equal">
         <article className="panel">
           <div className="panel-header"><div><h2>最新检测记录</h2><p>实时接收并自动刷新</p></div><Link to="/inspections">历史记录</Link></div>
-          {latestInspections.length ? <div className="table-wrap"><table><thead><tr><th>包裹编号</th><th>风险</th><th>时间</th></tr></thead><tbody>{latestInspections.slice(0, 6).map((record) => <tr key={record._id}><td><Link to={`/inspections/${record._id}`}>{record.packageId}</Link></td><td><RiskBadge level={record.riskLevel} /></td><td>{formatDateTime(record.timestamp)}</td></tr>)}</tbody></table></div> : <EmptyBlock title="暂无检测记录" action={<Link className="button button--small" to="/inspections/new">新增模拟记录</Link>} />}
+          {latestInspections.length ? <div className="table-wrap"><table><thead><tr><th>包裹编号</th><th>风险</th><th>时间</th></tr></thead><tbody>{latestInspections.slice(0, 6).map((record) => <tr key={record._id}><td><Link to={`/inspections/${record._id}`}>{record.packageId}</Link></td><td><RiskBadge level={record.riskLevel} /></td><td>{formatDateTime(record.timestamp)}</td></tr>)}</tbody></table></div> : <EmptyBlock title="暂无检测记录" action={<Link className="button button--small" to="/inspections/new">开始智能检测</Link>} />}
         </article>
         <article className="panel">
           <div className="panel-header"><div><h2>最新报警</h2><p>高风险记录需要人工处置</p></div><Link to="/alarms">报警中心</Link></div>
@@ -196,7 +196,7 @@ export default function DashboardPage() {
         </article>
       </section>
 
-      <div className="simulation-footnote"><strong>数据说明：</strong>本页统计来自 MongoDB 中的模拟检测数据，不代表真实安检结果。风险等级仅供功能演示和人工复核训练。</div>
+      <div className="simulation-footnote"><strong>数据说明：</strong>本页统计来自 MongoDB 中的真实或模拟检测记录；风险等级用于辅助复核，不替代现场安检结论。</div>
     </div>
   );
 }
