@@ -15,8 +15,25 @@ const xrayResultSchema = new mongoose.Schema(
     className: { type: String, required: true, trim: true, maxlength: 100 },
     confidence: { type: Number, required: true, min: 0, max: 1 },
     bbox: { type: bboxSchema, required: true },
+    viewId: { type: Number, enum: [0, 1], default: 0 },
     modelName: { type: String, default: 'mock-yolo', trim: true },
     modelVersion: { type: String, default: 'simulation-v1', trim: true },
+  },
+  { _id: false },
+);
+
+const imageViewSchema = new mongoose.Schema(
+  {
+    viewId: { type: Number, enum: [0, 1], required: true },
+    role: { type: String, enum: ['primary', 'side'], required: true },
+    fileName: { type: String, required: true, maxlength: 200 },
+    originalImageUrl: { type: String, required: true, maxlength: 500 },
+    annotatedImageUrl: { type: String, default: null, maxlength: 500 },
+    imageWidth: { type: Number, default: null, min: 0 },
+    imageHeight: { type: Number, default: null, min: 0 },
+    inferenceTimeMs: { type: Number, default: null, min: 0 },
+    decodedSize: { type: Number, default: null, min: 0 },
+    detections: { type: [xrayResultSchema], default: [] },
   },
   { _id: false },
 );
@@ -95,6 +112,17 @@ const inspectionRecordSchema = new mongoose.Schema(
     imageHeight: { type: Number, default: null, min: 0 },
     imageFingerprint: { type: String, default: null, maxlength: 128 },
     xrayResult: { type: [xrayResultSchema], default: [] },
+    imageSource: {
+      type: String,
+      enum: ['manual_upload', 'local', 'security_machine'],
+      default: 'manual_upload',
+    },
+    sourceDeviceId: { type: String, default: null, trim: true, maxlength: 120 },
+    sourceImageId: { type: String, default: null, trim: true, maxlength: 160 },
+    imageInputKey: { type: String, trim: true, maxlength: 320 },
+    imageType: { type: String, enum: ['jpeg', 'png', 'bmp', 'webp', 'gif'], default: null },
+    imageTime: { type: Date, default: null },
+    imageViews: { type: [imageViewSchema], default: [] },
     gasSensor: { type: gasSensorSchema, default: null },
     sourceMode: { type: sourceModeSchema, default: () => ({}) },
     serviceStatus: { type: serviceStatusSchema, default: () => ({}) },
@@ -116,6 +144,10 @@ inspectionRecordSchema.index({ status: 1, timestamp: -1 });
 inspectionRecordSchema.index({ 'gasSensor.alarm': 1, timestamp: -1 });
 inspectionRecordSchema.index({ isDeleted: 1, timestamp: -1 });
 inspectionRecordSchema.index({ imageFingerprint: 1, createdAt: -1 });
+<<<<<<< HEAD
+=======
+inspectionRecordSchema.index({ imageInputKey: 1 }, { unique: true, sparse: true });
+>>>>>>> 9e129af (feat: add security machine HTTP image ingestion)
 
 inspectionRecordSchema.set('toJSON', {
   transform(_doc, ret) {

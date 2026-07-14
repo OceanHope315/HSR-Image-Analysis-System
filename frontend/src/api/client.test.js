@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { buildQuery, request, setToken } from './client.js';
+import { buildQuery, request } from './client.js';
 
 function jsonResponse(payload, status = 200) {
   return {
@@ -26,21 +26,17 @@ describe('统一 API 客户端', () => {
     expect(query.get('startTime')).toBe(new Date('2026-07-11T08:30').toISOString());
   });
 
-  it('自动附加 Bearer Token 并解析统一成功响应', async () => {
-    setToken('test-token');
+  it('单机模式不附加登录凭证并解析统一成功响应', async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ success: true, data: { id: 1 } }));
     vi.stubGlobal('fetch', fetchMock);
     const payload = await request('/example');
     const options = fetchMock.mock.calls[0][1];
-    expect(options.headers.get('Authorization')).toBe('Bearer test-token');
+    expect(options.headers.get('Authorization')).toBeNull();
     expect(payload.data.id).toBe(1);
   });
 
-  it('401 响应触发统一会话失效事件', async () => {
+  it('错误响应仍保留统一错误信息', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ success: false, error: { code: 'TOKEN_EXPIRED', message: '登录已失效' } }, 401)));
-    const listener = vi.fn();
-    window.addEventListener('auth:unauthorized', listener, { once: true });
     await expect(request('/protected')).rejects.toMatchObject({ status: 401, code: 'TOKEN_EXPIRED' });
-    expect(listener).toHaveBeenCalledOnce();
   });
 });

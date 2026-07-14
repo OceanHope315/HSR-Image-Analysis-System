@@ -2,20 +2,22 @@
 
 这是一个面向本科课程与大创项目的全栈软件原型：接收模拟 X 光检测结果、模拟气体传感器数据、包裹与设备信息，使用可解释规则融合风险，帮助安检员查看、确认和处置报警，并保存历史记录与操作审计。
 
+真实安检仪 HTTP/Base64 接入、本地监听目录和模拟器用法见 [安检仪 HTTP 图片接入](./docs/security_machine_http.md)；真实设备协议验真见 [联调检查清单](./docs/security_machine_real_device_checklist.md)。
+
 > **重要边界：**当前 YOLO 结果、气体读数、设备心跳均由模拟适配器产生或由表单输入，仅用于系统开发和功能演示。项目没有连接真实安检仪、真实 YOLO 推理服务或真实传感器，也没有经过准确率、可靠性或现场安全认证。它是“辅助决策系统”，不能替代安检人员。
 
 ## 功能概览
 
-- JWT 登录和 `admin`、`inspector`、`viewer` 三角色权限；
-- 检测记录新增、详情、修改、分页筛选、排序、逻辑删除和管理员恢复；
+- 单一安检员工作模式，打开系统即可使用，无登录页和角色切换；
+- 检测记录新增、详情、修改、分页筛选和排序；
 - 服务端风险融合，输出 `low`、`medium`、`high`、分数和可解释原因；
-- medium/high 风险自动创建报警（high 额外触发醒目实时提示），支持指派、确认、处理中、解决、忽略和管理员重开；
+- medium/high 风险自动创建报警（high 额外触发醒目实时提示），支持确认、处理中、解决和忽略；
 - 设备 CRUD、模拟心跳和超时疑似离线；
 - Dashboard 聚合统计、风险趋势、气体统计、危险类别和最新记录；
 - 安全图片上传、预览和检测框叠加；
 - Socket.IO 推送新检测、高风险报警、报警状态和设备状态；
 - 关键写操作写入 `OperationLog`；
-- 幂等 seed、迁移、管理员创建、归档 dry-run、备份与恢复脚本；
+- 幂等 seed、迁移、归档 dry-run、备份与恢复脚本；
 - 后端单元/集成测试、前端工具测试、ESLint 和 Vite 构建；
 - Docker Compose、Nginx、健康检查和部署说明。
 
@@ -24,7 +26,7 @@
 | 层 | 技术 |
 |---|---|
 | 前端 | React 19、Vite、React Router、原生 CSS、Recharts、Socket.IO Client |
-| 后端 | Node.js 22、Express 5、Mongoose、Zod、JWT、bcryptjs、multer、Pino、Socket.IO |
+| 后端 | Node.js 22、Express 5、Mongoose、Zod、multer、Pino、Socket.IO |
 | 数据库 | MongoDB 8（事务环境需副本集） |
 | 测试 | Vitest、Supertest、mongodb-memory-server、Testing Library |
 | 部署 | Docker Compose、Nginx |
@@ -33,9 +35,9 @@
 
 ```mermaid
 flowchart LR
-    B["浏览器 / React"] -->|"REST + JWT"| E["Express API"]
+    B["浏览器 / React"] -->|"REST"| E["Express API"]
     B <-->|"Socket.IO"| S["实时事件层"]
-    E --> M["认证、校验、权限中间件"]
+    E --> M["单一安检员上下文、校验与错误中间件"]
     M --> C["Controller"]
     C --> SV["Service / 风险与业务规则"]
     SV --> R["Repository / Mongoose"]
@@ -57,8 +59,8 @@ sequenceDiagram
     participant Socket as Socket.IO
     participant UI as React 页面
 
-    Sim->>API: 检测数据（JWT）
-    API->>API: 校验参数与权限
+    Sim->>API: 检测数据
+    API->>API: 校验参数
     API->>Risk: 视觉 + 气体 + 设备状态
     Risk-->>API: riskLevel/score/reasons
     API->>DB: 事务保存检测与 medium/high 报警
@@ -76,22 +78,22 @@ sequenceDiagram
 ├─ backend/
 │  ├─ config/          # 环境、数据库、日志、风险规则
 │  ├─ controllers/     # HTTP 请求编排
-│  ├─ middleware/      # 登录、角色、校验、上传、错误处理
+│  ├─ middleware/      # 单一安检员上下文、校验、上传、错误处理
 │  ├─ models/          # 五个 Mongoose 模型
 │  ├─ repositories/    # 常用数据库查询
 │  ├─ routes/          # /api/v1 路由
 │  ├─ services/        # 风险、检测、报警、模拟和适配器
 │  ├─ validators/      # Zod 请求结构
-│  ├─ scripts/         # seed、迁移、管理员、归档、备份恢复
+│  ├─ scripts/         # seed、迁移、归档、备份恢复
 │  ├─ tests/           # 单元与集成测试
 │  ├─ uploads/xrays/   # 本地 X 光图片（运行数据不进 Git）
 │  ├─ app.js           # 创建并导出 Express app
 │  └─ server.js        # 数据库、HTTP、Socket 与优雅关闭
 ├─ frontend/
 │  ├─ src/api/         # 统一请求与各业务 API
-│  ├─ src/components/  # 布局、权限路由、通用 UI
-│  ├─ src/context/     # 登录状态与实时连接
-│  ├─ src/pages/       # 登录、Dashboard、记录、报警、设备等页面
+│  ├─ src/components/  # 布局与通用 UI
+│  ├─ src/context/     # 安检员上下文与实时连接
+│  ├─ src/pages/       # Dashboard、记录、报警、设备等页面
 │  └─ src/utils/       # 格式化和检测框坐标工具
 ├─ docker-compose.yml
 ├─ API_DOCUMENTATION.md
@@ -100,21 +102,18 @@ sequenceDiagram
 └─ DEPLOYMENT.md
 ```
 
-## 页面与角色
+## 页面（单一安检员）
 
-| 页面 | 路径 | admin | inspector | viewer |
-|---|---|:---:|:---:|:---:|
-| 登录 | `/login` | ✓ | ✓ | ✓ |
-| Dashboard | `/` | ✓ | ✓ | ✓ |
-| 历史检测 | `/inspections` | ✓ | ✓ | ✓ |
-| 新增模拟检测 | `/inspections/new` | ✓ | ✓ | — |
-| 检测详情 | `/inspections/:id` | ✓ | ✓ | ✓ |
-| 报警中心 | `/alarms` | ✓ | 处置 | 只读 |
-| 设备管理 | `/devices` | 管理 | 查看 | 查看 |
-| 用户管理 | `/users` | ✓ | — | — |
-| 操作日志 | `/logs` | ✓ | — | — |
+| 页面 | 路径 |
+|---|---|
+| Dashboard | `/` |
+| 历史检测 | `/inspections` |
+| 新增检测 | `/inspections/new` |
+| 检测详情 | `/inspections/:id` |
+| 报警中心 | `/alarms` |
+| 设备状态 | `/devices` |
 
-后端是最终权限边界。隐藏前端按钮只是改善体验，不能替代 API 的 401/403 校验。
+系统按安检终端的单一操作员模式运行，不显示登录、用户管理或角色切换入口。部署时应仅开放在受控的安检内网，不要直接暴露到公共网络。
 
 ## 本地启动（Windows 11 + WSL）
 
@@ -198,10 +197,9 @@ test -f frontend/.env || cp frontend/.env.example frontend/.env
 
 ```dotenv
 NODE_ENV=development
+HOST=0.0.0.0
 PORT=5000
 MONGO_URI=mongodb://127.0.0.1:27017/railway_security
-JWT_SECRET=请填写至少32字节随机值
-JWT_EXPIRES_IN=8h
 CLIENT_ORIGIN=http://localhost:5174
 SOCKET_CORS_ORIGIN=http://localhost:5174
 UPLOAD_DIR=uploads/xrays
@@ -209,12 +207,6 @@ MAX_UPLOAD_SIZE=5242880
 LOG_LEVEL=info
 TRANSACTION_MODE=auto
 SIMULATION_ENABLED=true
-```
-
-生成 JWT 密钥可用：
-
-```powershell
-$b = New-Object byte[] 48; [Security.Cryptography.RandomNumberGenerator]::Fill($b); [Convert]::ToBase64String($b)
 ```
 
 前端默认：
@@ -226,6 +218,8 @@ VITE_SOCKET_URL=http://localhost:5000
 
 Vite 开发端口为 `5174`，避免与已有 `5173` 服务冲突。任何 `.env` 都不应提交到 Git。
 
+后端监听地址由 `HOST` 控制，默认 `0.0.0.0`，会显式接受本机各网络接口的连接；HTTP/Socket.IO 端口继续由 `PORT` 控制，默认 `5000`。真实安检仪应访问电脑的局域网 IP，而不是 `0.0.0.0`。
+
 ### 5. 初始化数据库
 
 先运行兼容迁移：
@@ -234,7 +228,7 @@ Vite 开发端口为 `5174`，避免与已有 `5173` 服务冲突。任何 `.env
 npm run migrate
 ```
 
-生成三类用户、设备、至少 50 条模拟记录和报警：
+可选生成设备、至少 50 条模拟记录和报警。seed 脚本为兼容旧数据仍要求提供一次临时密码，但当前前端不会使用这些历史账号登录：
 
 ```powershell
 $env:SEED_DEFAULT_PASSWORD="在当前终端临时设置的强密码"
@@ -251,19 +245,7 @@ npm run seed
 unset SEED_DEFAULT_PASSWORD
 ```
 
-管理员的默认 seed 身份是用户名 `admin`、邮箱 `admin@163.com`，也可通过 `.env` 的 `SEED_ADMIN_EMAIL` 修改；其他账号邮箱来自 `SEED_INSPECTOR_EMAIL`、`SEED_VIEWER_EMAIL`。仓库**不在源码或环境变量示例中硬编码密码**；三者使用本次 seed 时通过 `SEED_DEFAULT_PASSWORD` 提供的密码。seed 是幂等的，会避免无意重复插入。
-
-只创建管理员时：
-
-```powershell
-$env:ADMIN_USERNAME="admin"
-$env:ADMIN_EMAIL="admin@163.com"
-$env:ADMIN_PASSWORD="在当前终端临时设置、至少8位且含字母数字的密码"
-npm run create-admin
-Remove-Item Env:ADMIN_USERNAME,Env:ADMIN_EMAIL,Env:ADMIN_PASSWORD
-```
-
-WSL 可用 `read -s ADMIN_PASSWORD` 后导出 `ADMIN_USERNAME`、`ADMIN_EMAIL`、`ADMIN_PASSWORD` 再运行。脚本不覆盖已有邮箱或密码，也不会把密码写入代码；缺少变量时会明确退出。
+seed 是幂等的，会避免无意重复插入。只运行正式设备接入时可以跳过 seed。
 
 ### 6. 启动系统
 
@@ -304,7 +286,6 @@ WSL 中可用 `curl http://localhost:5000/api/v1/health`。
 | `npm run lint` | 检查工作区代码规范 |
 | `npm run seed` | 幂等生成演示数据 |
 | `npm run migrate` | 执行兼容迁移/索引准备 |
-| `npm run create-admin` | 安全创建管理员 |
 | `npm run archive:plan --workspace backend` | 只生成归档候选计划，不删除数据 |
 
 归档预演需要明确截止时间：
@@ -332,8 +313,8 @@ npm run build
 | 检查 | 实际结果 |
 |---|---|
 | `npm run lint` | 通过 |
-| 后端 Vitest | 37 个测试通过 |
-| 前端 Vitest | 11 个测试通过 |
+| 后端 Vitest | 44 个测试通过 |
+| 前端 Vitest | 13 个测试通过 |
 | `npm run build` | Vite 生产构建通过 |
 | Docker Compose | 本机没有 Docker，未构建、未启动 |
 
@@ -341,11 +322,11 @@ npm run build
 
 手工冒烟流程：
 
-1. 用三角色分别登录，确认菜单和写权限不同；
+1. 打开首页，确认无需登录即可进入安检员工作台；
 2. 新增一条模拟检测，确认最终风险由服务端计算；
 3. 生成 high 记录，确认报警、Dashboard 和实时提示；
 4. 安检员按合法顺序处置报警；
-5. 管理员逻辑删除再恢复记录，检查操作日志；
+5. 查看检测详情和操作日志是否正常关联；
 6. 上传正常图片，再尝试超限或非图片文件并确认被拒绝；
 7. 暂停后端再恢复，观察前端实时连接状态与 REST 降级。
 
@@ -355,12 +336,6 @@ npm run build
 
 ```text
 http://localhost:5000/api/v1
-```
-
-受保护请求使用：
-
-```http
-Authorization: Bearer <token>
 ```
 
 成功响应通常为 `{ "success": true, "data": ... }`；错误统一为：
@@ -393,7 +368,6 @@ Authorization: Bearer <token>
 
 ```powershell
 Copy-Item .env.example .env
-# 编辑根 .env，必须设置随机 JWT_SECRET
 docker compose config
 docker compose build
 docker compose up -d
@@ -449,10 +423,6 @@ Get-NetTCPConnection -LocalPort 5174 -ErrorAction SilentlyContinue
 
 不要擅自终止不属于本项目的进程。若确需改端口，同时修改 Vite 配置、`CLIENT_ORIGIN` 和 `SOCKET_CORS_ORIGIN`。
 
-### 后端提示 JWT_SECRET
-
-复制 `.env.example` 不等于配置完成。生成随机值填入 `backend/.env`，不要在代码中设置“临时默认密钥”。
-
 ### MongoDB 连接失败
 
 确认服务状态、URI、运行环境和端口；Windows 与 WSL 混用时分别在 Node 所在环境测试 `mongosh`。不要把认证 URI 输出到公开日志。
@@ -460,10 +430,6 @@ Get-NetTCPConnection -LocalPort 5174 -ErrorAction SilentlyContinue
 ### 事务不可用
 
 `Transaction numbers are only allowed on a replica set member` 表示当前 MongoDB 是独立实例。开发可用 `TRANSACTION_MODE=auto` 明确降级；要验证原子性请使用副本集。Compose 已配置 `rs0`，但仍需在装有 Docker 的机器实跑。
-
-### 登录失败
-
-先确认执行了 seed/create-admin、使用的是环境变量指定邮箱和本次提供的密码。错误响应故意不区分“用户不存在”和“密码错误”。
 
 ### 图片上传失败
 
@@ -488,15 +454,15 @@ Get-NetTCPConnection -LocalPort 5174 -ErrorAction SilentlyContinue
 | InspectionRecord | `{ riskLevel: 1, timestamp: -1 }` | 某风险等级按时间倒序/区间查询 |
 | InspectionRecord | `{ status: 1, timestamp: -1 }` | 某复核状态的时间列表 |
 | InspectionRecord | `{ gasSensor.alarm: 1, timestamp: -1 }` | 气体是否报警 + 时间列表 |
-| InspectionRecord | `{ isDeleted: 1, timestamp: -1 }` | 默认未删除列表、管理员删除记录列表 |
+| InspectionRecord | `{ isDeleted: 1, timestamp: -1 }` | 默认未删除列表、历史删除记录列表 |
 | AlarmRecord | `inspectionId` unique | 每次检测最多一条报警与关联查询 |
 | AlarmRecord | `{ status: 1, createdAt: -1 }` | 未确认/处理中报警按时间查看 |
 | AlarmRecord | `{ level: 1, createdAt: -1 }` | medium/high 报警筛选 |
 | Device | `deviceCode` unique | 编号唯一与按编号定位 |
 | Device | `status` | 原始设备状态筛选 |
 | Device | `lastHeartbeatAt` | 心跳过期范围检查 |
-| User | `email` unique | 登录/创建冲突；邮箱唯一 |
-| User | `role`、`isActive` | 管理员筛角色/有效状态与认证状态检查 |
+| User | `email` unique | 旧版本账号数据兼容；当前单机界面不使用 |
+| User | `role`、`isActive` | 旧版本数据兼容；当前单机界面不提供角色管理 |
 | OperationLog | `userId` | 按操作人筛审计记录 |
 | OperationLog | `{ resourceType: 1, resourceId: 1, createdAt: -1 }` | 某资源的时间线 |
 | OperationLog | `{ action: 1, createdAt: -1 }` | 精确动作的审计时间线 |
@@ -519,11 +485,23 @@ db.inspectionrecords.find({ riskLevel: "high" })
 - 参考气体协议只提供通道连接与报警等级，不提供真实浓度；
 - 风险阈值是可解释演示规则，尚未由真实数据或行业专家标定；
 - 本地文件上传适合单机演示，多实例部署需要受控共享存储方案；
-- JWT 采用前端保存并在退出时清除的方案，没有服务端 Token 吊销列表；
+- 当前为免登录的单一安检员模式，只适合部署在受控内网；
 - 独立 MongoDB 的补偿式降级不具备多文档事务原子性；
 - Docker 文件在当前开发机仅静态校对，尚未实际构建；
 - 真正上线还需要 HTTPS、密钥管理、MongoDB 认证/多节点、副本备份、监控、漏洞扫描和现场验收。
+<<<<<<< HEAD
   
+=======
+
+## 继续学习
+
+- [YOLO_GAS_INTEGRATION.md](./YOLO_GAS_INTEGRATION.md)：YOLO、气体 TCP、图形界面、启动与验收步骤；
+- [LEARNING_NOTES.md](./LEARNING_NOTES.md)：按“一次请求如何穿过前端、后端和数据库”的顺序讲解 28 个主题；
+- [API_DOCUMENTATION.md](./API_DOCUMENTATION.md)：端点、权限、参数、响应和状态码；
+- [COURSE_CHECKLIST.md](./COURSE_CHECKLIST.md)：原有、本次新增、尚未实现和可选增强；
+- [REPOSITORY_AUDIT.md](./REPOSITORY_AUDIT.md)：项目开始时的仓库与外部实验资产审计；
+- [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md) / [PROGRESS.md](./PROGRESS.md)：阶段计划与每次实际验证结果。
+>>>>>>> 9e129af (feat: add security machine HTTP image ingestion)
 
 ## 许可证与使用责任
 

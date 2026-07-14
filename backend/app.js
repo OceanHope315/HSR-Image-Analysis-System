@@ -16,8 +16,9 @@ import gasRoutes from './routes/gasRoutes.js';
 import inspectionRoutes from './routes/inspectionRoutes.js';
 import logRoutes from './routes/logRoutes.js';
 import simulationRoutes from './routes/simulationRoutes.js';
+import securityMachineRoutes from './routes/securityMachineRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
-import userRoutes from './routes/userRoutes.js';
+import { securityMachineJsonError } from './controllers/securityMachineController.js';
 import { health } from './controllers/healthController.js';
 import { AppError } from './utils/AppError.js';
 
@@ -34,6 +35,12 @@ app.use(cors({
   credentials: true,
 }));
 app.use(pinoHttp({ logger, quietReqLogger: env.isProduction }));
+app.use(
+  env.securityMachineRoute,
+  express.json({ limit: `${env.imageUploadLimitMb}mb`, strict: true }),
+  securityMachineRoutes,
+  securityMachineJsonError,
+);
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: false, limit: '256kb' }));
 
@@ -51,7 +58,6 @@ app.use('/api/v1/inspections', inspectionRoutes);
 app.use('/api/v1/alarms', alarmRoutes);
 app.use('/api/v1/devices', deviceRoutes);
 app.use('/api/v1/dashboard', dashboardRoutes);
-app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/logs', logRoutes);
 app.use('/api/v1/simulation', simulationRoutes);
 app.use('/api/v1/uploads', uploadRoutes);

@@ -1,5 +1,7 @@
 # API 文档
 
+> 当前界面已切换为免登录的单一安检员模式，前端请求不再携带 JWT。本文中旧版登录与多角色示例仅用于历史接口兼容，不代表当前页面流程。
+
 - 版本：`v1`
 - 开发基础地址：`http://localhost:5000/api/v1`
 - 内容类型：除文件上传外均为 `application/json`
@@ -698,3 +700,15 @@ Invoke-RestMethod -Uri 'http://localhost:5000/api/v1/inspections?riskLevel=high&
 - `POST /api/v1/gas/clear-alarm`：`admin/inspector`，向在线 TCP 设备发送解除报警命令。
 
 常见新增错误码：`YOLO_SERVICE_OFFLINE`、`YOLO_SERVICE_TIMEOUT`、`YOLO_MODEL_NOT_LOADED`、`GAS_DEVICE_OFFLINE`、`GAS_COMMAND_FAILED`、`DATABASE_UNAVAILABLE`、`DUPLICATE_IMAGE`、`DETECTION_IN_PROGRESS`。
+<<<<<<< HEAD
+=======
+
+## 安检仪推图接口（开发阶段）
+
+- `POST /imageAnalysis/imgInfo`
+- `Content-Type: application/json`
+- 请求字段：`devID`、`imgID`、`imgType`、`img.imgName0/img0`、可选 `img.imgName1/img1`、`img.imgTime`
+- `img0/img1` 兼容 raw Base64 与 data URI；两者至少提供一个。
+- 返回字段：`resCode`、`imgID`、`resMsg0`、`resMsg1`、`errorMsg`。
+- `resMsg0/resMsg1` 当前为开发用对象数组，真实设备精确序列化格式尚待联调确认。
+>>>>>>> 9e129af (feat: add security machine HTTP image ingestion)

@@ -4,8 +4,20 @@ import { env } from '../config/env.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { forbidden, unauthorized } from '../utils/AppError.js';
 
+const singleOperator = Object.freeze({
+  _id: null,
+  username: '安检员',
+  role: 'inspector',
+  isSingleOperator: true,
+});
+
 export const authenticate = asyncHandler(async (req, _res, next) => {
   const authorization = req.get('authorization') ?? '';
+  if (!authorization) {
+    req.user = singleOperator;
+    next();
+    return;
+  }
   const [scheme, token] = authorization.split(' ');
   if (scheme !== 'Bearer' || !token) throw unauthorized('登录凭证缺失或格式错误');
   if (!env.jwtSecret) throw unauthorized('服务端认证尚未配置');

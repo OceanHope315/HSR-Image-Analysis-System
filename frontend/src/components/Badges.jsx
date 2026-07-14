@@ -3,7 +3,6 @@ import {
   deviceStatusLabel,
   inspectionStatusLabel,
   riskLabel,
-  roleLabel,
 } from '../utils/formatters.js';
 
 export function RiskBadge({ level }) {
@@ -26,8 +25,4 @@ export function DeviceStatusBadge({ status, possiblyOffline = false }) {
       {possiblyOffline && status === 'online' ? '疑似离线' : deviceStatusLabel(status)}
     </span>
   );
-}
-
-export function RoleBadge({ role }) {
-  return <span className={`badge badge--role-${role || 'unknown'}`}>{roleLabel(role)}</span>;
 }

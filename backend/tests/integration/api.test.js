@@ -112,8 +112,8 @@ describe('身份认证与角色权限', () => {
     expect(failed.status).toBe(401);
   });
 
-  it('未登录访问受保护接口返回 401，viewer 写入返回 403', async () => {
-    expect((await request(app).get('/api/v1/inspections')).status).toBe(401);
+  it('未登录时直接按安检员进入，兼容令牌仍保留原权限限制', async () => {
+    expect((await request(app).get('/api/v1/inspections')).status).toBe(200);
     const viewerToken = await login('viewer');
     expect((await createRecord(viewerToken, 'VIEWER-DENIED')).status).toBe(403);
   });
@@ -215,16 +215,16 @@ describe('报警、设备、统计和管理接口', () => {
     expect((await request(app).get('/api/v1/dashboard/device-status').set(auth(token))).status).toBe(200);
   });
 
-  it('用户响应和操作日志均不保存 passwordHash，日志仅管理员可看', async () => {
+  it('单机模式不暴露用户管理接口，操作日志仍保留原有审计保护', async () => {
     const adminToken = await login('admin');
     const inspectorToken = await login('inspector');
     const response = await request(app).post('/api/v1/users').set(auth(adminToken)).send({
       username: 'new-viewer', email: 'new-viewer@test.local', password: 'Secure1234', role: 'viewer',
     });
-    expect(response.status).toBe(201);
-    expect(response.body.data.passwordHash).toBeUndefined();
-    const log = await OperationLog.findOne({ action: 'user.create' }).lean();
-    expect(log.after.passwordHash).toBeUndefined();
+    expect(response.status).toBe(404);
+    await createRecord(inspectorToken, 'AUDIT-SINGLE-OPERATOR');
+    const log = await OperationLog.findOne({ action: 'inspection.create' }).lean();
+    expect(log).toBeTruthy();
     expect((await request(app).get('/api/v1/logs').set(auth(inspectorToken))).status).toBe(403);
     expect((await request(app).get('/api/v1/logs').set(auth(adminToken))).status).toBe(200);
   });

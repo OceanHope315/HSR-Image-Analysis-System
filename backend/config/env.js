@@ -11,8 +11,14 @@ const booleanFromEnv = z
   .default('true')
   .transform((value) => value === 'true');
 
+const disabledBooleanFromEnv = z
+  .enum(['true', 'false'])
+  .default('false')
+  .transform((value) => value === 'true');
+
 const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  HOST: z.string().trim().min(1).default('0.0.0.0'),
   PORT: z.coerce.number().int().min(1).max(65535).default(5000),
   MONGO_URI: z.string().min(1).default('mongodb://127.0.0.1:27017/railway_security'),
   TEST_MONGO_URI: z.string().optional(),
@@ -29,6 +35,18 @@ const schema = z.object({
   YOLO_SERVICE_URL: z.string().url().default('http://127.0.0.1:8000'),
   YOLO_REQUEST_TIMEOUT_MS: z.coerce.number().int().min(500).max(120_000).default(30_000),
   YOLO_HEALTH_TIMEOUT_MS: z.coerce.number().int().min(200).max(10_000).default(2_000),
+<<<<<<< HEAD
+=======
+  IMAGE_SOURCE: z.enum(['local', 'security_machine', 'both']).default('both'),
+  LOCAL_IMAGE_DIR: z.string().trim().min(1).default('incoming/xrays'),
+  LOCAL_IMAGE_POLL_MS: z.coerce.number().int().min(250).max(60_000).default(1_000),
+  LOCAL_IMAGE_DEVICE_ID: z.string().trim().min(1).max(120).default('LOCAL_FOLDER'),
+  SECURITY_MACHINE_ROUTE: z.string().regex(/^\/[A-Za-z0-9/_-]+$/).default('/imageAnalysis/imgInfo'),
+  IMAGE_UPLOAD_LIMIT_MB: z.coerce.number().positive().max(100).default(20),
+  SECURITY_MACHINE_IMAGE_LIMIT_MB: z.coerce.number().positive().max(50).default(10),
+  SECURITY_MACHINE_DEBUG: disabledBooleanFromEnv,
+  SECURITY_MACHINE_DEBUG_DIR: z.string().trim().min(1).default('debug/security-machine'),
+>>>>>>> 9e129af (feat: add security machine HTTP image ingestion)
   GAS_TCP_ENABLED: booleanFromEnv,
   GAS_TCP_HOST: z.string().trim().min(1).default('127.0.0.1'),
   GAS_TCP_PORT: z.coerce.number().int().min(1).max(65_535).default(502),
@@ -53,9 +71,16 @@ const values = parsed.data;
 const uploadDir = path.isAbsolute(values.UPLOAD_DIR)
   ? values.UPLOAD_DIR
   : path.resolve(backendRoot, values.UPLOAD_DIR);
+const localImageDir = path.isAbsolute(values.LOCAL_IMAGE_DIR)
+  ? values.LOCAL_IMAGE_DIR
+  : path.resolve(backendRoot, values.LOCAL_IMAGE_DIR);
+const securityMachineDebugDir = path.isAbsolute(values.SECURITY_MACHINE_DEBUG_DIR)
+  ? values.SECURITY_MACHINE_DEBUG_DIR
+  : path.resolve(backendRoot, values.SECURITY_MACHINE_DEBUG_DIR);
 
 export const env = Object.freeze({
   nodeEnv: values.NODE_ENV,
+  host: values.HOST,
   port: values.PORT,
   mongoUri: values.NODE_ENV === 'test' && values.TEST_MONGO_URI ? values.TEST_MONGO_URI : values.MONGO_URI,
   jwtSecret: values.JWT_SECRET,
@@ -71,6 +96,18 @@ export const env = Object.freeze({
   yoloServiceUrl: values.YOLO_SERVICE_URL.replace(/\/$/, ''),
   yoloRequestTimeoutMs: values.YOLO_REQUEST_TIMEOUT_MS,
   yoloHealthTimeoutMs: values.YOLO_HEALTH_TIMEOUT_MS,
+<<<<<<< HEAD
+=======
+  imageSource: values.IMAGE_SOURCE,
+  localImageDir,
+  localImagePollMs: values.LOCAL_IMAGE_POLL_MS,
+  localImageDeviceId: values.LOCAL_IMAGE_DEVICE_ID,
+  securityMachineRoute: values.SECURITY_MACHINE_ROUTE.replace(/\/$/, '') || '/',
+  imageUploadLimitMb: values.IMAGE_UPLOAD_LIMIT_MB,
+  securityMachineImageLimitBytes: Math.round(values.SECURITY_MACHINE_IMAGE_LIMIT_MB * 1024 * 1024),
+  securityMachineDebug: values.SECURITY_MACHINE_DEBUG,
+  securityMachineDebugDir,
+>>>>>>> 9e129af (feat: add security machine HTTP image ingestion)
   gasTcpEnabled: values.GAS_TCP_ENABLED,
   gasTcpHost: values.GAS_TCP_HOST,
   gasTcpPort: values.GAS_TCP_PORT,

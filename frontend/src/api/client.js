@@ -1,6 +1,5 @@
 const configuredBase = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 export const API_BASE_URL = configuredBase.replace(/\/$/, '');
-export const TOKEN_STORAGE_KEY = 'railway-security-token';
 
 export class ApiError extends Error {
   constructor(message, { status = 0, code = 'NETWORK_ERROR', details = [], response = null } = {}) {
@@ -11,15 +10,6 @@ export class ApiError extends Error {
     this.details = details;
     this.response = response;
   }
-}
-
-export function getToken() {
-  return localStorage.getItem(TOKEN_STORAGE_KEY);
-}
-
-export function setToken(token) {
-  if (token) localStorage.setItem(TOKEN_STORAGE_KEY, token);
-  else localStorage.removeItem(TOKEN_STORAGE_KEY);
 }
 
 export function buildQuery(params = {}) {
@@ -41,12 +31,10 @@ export function buildQuery(params = {}) {
 
 export async function request(path, options = {}) {
   const { body, headers, ...rest } = options;
-  const token = getToken();
   const isFormData = body instanceof FormData;
   const requestHeaders = new Headers(headers || {});
   requestHeaders.set('Accept', 'application/json');
   if (!isFormData && body !== undefined) requestHeaders.set('Content-Type', 'application/json');
-  if (token) requestHeaders.set('Authorization', `Bearer ${token}`);
 
   let response;
   try {
@@ -67,7 +55,6 @@ export async function request(path, options = {}) {
 
   if (!response.ok || payload?.success === false) {
     const error = payload?.error || {};
-    if (response.status === 401) window.dispatchEvent(new CustomEvent('auth:unauthorized'));
     throw new ApiError(error.message || `请求失败（${response.status}）`, {
       status: response.status,
       code: error.code || 'REQUEST_FAILED',

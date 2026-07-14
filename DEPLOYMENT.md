@@ -165,6 +165,7 @@ docker compose exec mongodb mongosh --quiet --eval "rs.status().members.map(m =>
 | 变量 | 作用 | 生产建议 |
 |---|---|---|
 | `NODE_ENV` | 运行环境 | `production` |
+| `HOST` | HTTP/Socket.IO 监听地址 | 容器或局域网接入使用 `0.0.0.0` |
 | `PORT` | HTTP/Socket.IO 端口 | 容器内 `5000` |
 | `MONGO_URI` | MongoDB 连接串 | Secret 注入，带副本集与认证参数 |
 | `JWT_SECRET` | JWT 签名密钥 | 至少 32 字节随机值，定期轮换 |

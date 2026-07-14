@@ -1,12 +1,16 @@
 import http from 'node:http';
-import jwt from 'jsonwebtoken';
 import { Server as SocketServer } from 'socket.io';
 import app from './app.js';
 import { connectDatabase, disconnectDatabase } from './config/db.js';
-import { assertRuntimeSecrets, env } from './config/env.js';
+import { env } from './config/env.js';
 import { logger } from './config/logger.js';
+<<<<<<< HEAD
 import { User } from './models/User.js';
 import { startSensorCommunication, stopSensorCommunication } from './services/sensorAdapterService.js';
+=======
+import { startSensorCommunication, stopSensorCommunication } from './services/sensorAdapterService.js';
+import { startLocalFolderImageSource, stopLocalFolderImageSource } from './services/localFolderImageSource.js';
+>>>>>>> 9e129af (feat: add security machine HTTP image ingestion)
 import { setSocketServer } from './utils/socket.js';
 
 let httpServer;
@@ -27,7 +31,10 @@ async function connectDatabaseWithRetry() {
 }
 
 async function start() {
+<<<<<<< HEAD
   assertRuntimeSecrets();
+=======
+>>>>>>> 9e129af (feat: add security machine HTTP image ingestion)
   await connectDatabaseWithRetry();
   startSensorCommunication();
   httpServer = http.createServer(app);
@@ -36,25 +43,16 @@ async function start() {
     cors: { origin: origins, credentials: true },
     transports: ['websocket', 'polling'],
   });
-  io.use(async (socket, next) => {
-    try {
-      const token = socket.handshake.auth?.token;
-      if (!token) return next(new Error('UNAUTHORIZED'));
-      const payload = jwt.verify(token, env.jwtSecret, { algorithms: ['HS256'] });
-      const user = await User.findOne({ _id: payload.sub, isActive: true });
-      if (!user) return next(new Error('UNAUTHORIZED'));
-      socket.data.user = { id: String(user._id), role: user.role, username: user.username };
-      return next();
-    } catch {
-      return next(new Error('UNAUTHORIZED'));
-    }
-  });
   io.on('connection', (socket) => {
-    logger.debug({ socketId: socket.id, userId: socket.data.user.id }, '实时连接已建立');
+    logger.debug({ socketId: socket.id }, '单机模式实时连接已建立');
   });
   setSocketServer(io);
-  await new Promise((resolve) => httpServer.listen(env.port, resolve));
-  logger.info({ port: env.port }, '铁路安检判图辅助决策系统后端已启动');
+  startLocalFolderImageSource();
+  await new Promise((resolve) => httpServer.listen(env.port, env.host, resolve));
+  logger.info(
+    { host: env.host, port: env.port, address: `http://${env.host}:${env.port}` },
+    '铁路安检判图辅助决策系统后端已启动',
+  );
 }
 
 async function shutdown(signal, exitCode = 0) {
@@ -65,6 +63,10 @@ async function shutdown(signal, exitCode = 0) {
   forceTimer.unref();
   clearTimeout(databaseRetryTimer);
   stopSensorCommunication();
+<<<<<<< HEAD
+=======
+  stopLocalFolderImageSource();
+>>>>>>> 9e129af (feat: add security machine HTTP image ingestion)
   if (io) await new Promise((resolve) => io.close(resolve));
   if (httpServer?.listening) {
     await new Promise((resolve) => httpServer.close(resolve));

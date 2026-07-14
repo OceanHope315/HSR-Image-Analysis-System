@@ -17,6 +17,7 @@
     "test": "npm run test --workspace backend && npm run test --workspace frontend",
     "lint": "npm run lint --workspaces --if-present",
     "smoke": "node scripts/smoke.mjs",
+    "simulator": "node scripts/security_machine_simulator.mjs",
     "seed": "npm run seed --workspace backend",
     "migrate": "npm run migrate --workspace backend",
     "create-admin": "npm run create-admin --workspace backend"

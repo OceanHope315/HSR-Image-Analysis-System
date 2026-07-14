@@ -8,6 +8,9 @@ logs/
 *.log
 backend/uploads/xrays/*
 !backend/uploads/xrays/.gitkeep
+backend/incoming/xrays/*
+!backend/incoming/xrays/.gitkeep
+backend/debug/security-machine/
 backups/
 *.pt
 *.onnx
