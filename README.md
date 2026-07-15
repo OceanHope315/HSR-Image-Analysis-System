@@ -523,15 +523,7 @@ db.inspectionrecords.find({ riskLevel: "high" })
 - 独立 MongoDB 的补偿式降级不具备多文档事务原子性；
 - Docker 文件在当前开发机仅静态校对，尚未实际构建；
 - 真正上线还需要 HTTPS、密钥管理、MongoDB 认证/多节点、副本备份、监控、漏洞扫描和现场验收。
-
-## 继续学习
-
-- [YOLO_GAS_INTEGRATION.md](./YOLO_GAS_INTEGRATION.md)：YOLO、气体 TCP、图形界面、启动与验收步骤；
-- [LEARNING_NOTES.md](./LEARNING_NOTES.md)：按“一次请求如何穿过前端、后端和数据库”的顺序讲解 28 个主题；
-- [API_DOCUMENTATION.md](./API_DOCUMENTATION.md)：端点、权限、参数、响应和状态码；
-- [COURSE_CHECKLIST.md](./COURSE_CHECKLIST.md)：原有、本次新增、尚未实现和可选增强；
-- [REPOSITORY_AUDIT.md](./REPOSITORY_AUDIT.md)：项目开始时的仓库与外部实验资产审计；
-- [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md) / [PROGRESS.md](./PROGRESS.md)：阶段计划与每次实际验证结果。
+  
 
 ## 许可证与使用责任
 
