@@ -1,8 +1,5 @@
 import mongoose from 'mongoose';
-<<<<<<< HEAD
-=======
 import { env } from '../config/env.js';
->>>>>>> 9e129af (feat: add security machine HTTP image ingestion)
 import { runSmartDetection } from '../services/smartDetectionService.js';
 import { getGasStatus } from '../services/sensorAdapterService.js';
 import { getYoloStatus } from '../services/yoloAdapterService.js';
@@ -23,15 +20,12 @@ export async function integrationStatus(_req, res) {
         status: databaseStates[mongoose.connection.readyState] ?? 'unknown',
         connected: mongoose.connection.readyState === 1,
       },
-<<<<<<< HEAD
-=======
       imageInput: {
         mode: env.imageSource,
         localFolderEnabled: ['local', 'both'].includes(env.imageSource),
         securityMachineEnabled: ['security_machine', 'both'].includes(env.imageSource),
         securityMachineRoute: env.securityMachineRoute,
       },
->>>>>>> 9e129af (feat: add security machine HTTP image ingestion)
       timestamp: new Date().toISOString(),
     },
   });

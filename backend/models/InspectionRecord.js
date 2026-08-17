@@ -144,10 +144,7 @@ inspectionRecordSchema.index({ status: 1, timestamp: -1 });
 inspectionRecordSchema.index({ 'gasSensor.alarm': 1, timestamp: -1 });
 inspectionRecordSchema.index({ isDeleted: 1, timestamp: -1 });
 inspectionRecordSchema.index({ imageFingerprint: 1, createdAt: -1 });
-<<<<<<< HEAD
-=======
 inspectionRecordSchema.index({ imageInputKey: 1 }, { unique: true, sparse: true });
->>>>>>> 9e129af (feat: add security machine HTTP image ingestion)
 
 inspectionRecordSchema.set('toJSON', {
   transform(_doc, ret) {

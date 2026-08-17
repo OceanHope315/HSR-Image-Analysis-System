@@ -5,10 +5,7 @@ import { InspectionRecord } from '../models/InspectionRecord.js';
 import { AppError } from '../utils/AppError.js';
 import { createInspection } from './inspectionService.js';
 import { readSensor } from './sensorAdapterService.js';
-<<<<<<< HEAD
-=======
 import { processUnifiedImageInput } from './unifiedImageInputService.js';
->>>>>>> 9e129af (feat: add security machine HTTP image ingestion)
 import { analyzeXray, createMockYoloResult } from './yoloAdapterService.js';
 
 const inFlightDetections = new Set();
@@ -58,8 +55,6 @@ export async function runSmartDetection(input, file, operatorId) {
     inFlightDetections.add(inFlightKey);
     ownsInFlightKey = true;
     await assertNotRecentlySubmitted(fingerprint);
-<<<<<<< HEAD
-=======
     if (input.visionMode === 'real') {
       const result = await processUnifiedImageInput({
         source: 'manual_upload',
@@ -82,7 +77,6 @@ export async function runSmartDetection(input, file, operatorId) {
       retainUploadedImage = true;
       return result;
     }
->>>>>>> 9e129af (feat: add security machine HTTP image ingestion)
     const vision = input.visionMode === 'real'
       ? await analyzeXray(file.path, { mode: 'real', mimetype: file.mimetype })
       : await analyzeXray(file?.path, {

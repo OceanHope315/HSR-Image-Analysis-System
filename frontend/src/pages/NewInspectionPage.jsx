@@ -1,50 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-<<<<<<< HEAD
-import { Link, useNavigate } from 'react-router-dom';
-import { detectionApi } from '../api/detectionApi.js';
-import { deviceApi } from '../api/deviceApi.js';
-import PageHeader from '../components/PageHeader.jsx';
-import { InlineNotice, Spinner } from '../components/StateViews.jsx';
-import { formatDateTime, normalizeList, objectId, toDateTimeLocal } from '../utils/formatters.js';
-
-const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
-const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/bmp', 'image/webp']);
-const detectionSteps = [
-  ['图片上传中', '正在把图像和检测参数发送到后端'],
-  ['YOLO 检测中', '真实模式调用模型，模拟模式读取演示目标框'],
-  ['正在读取气体数据', '获取通信设备最新数据或模拟输入'],
-  ['正在进行风险融合', '由后端统一计算风险等级和依据'],
-  ['正在保存检测记录', '写入 MongoDB 并关联报警'],
-  ['检测完成', '结果已保存，可前往详情复核'],
-];
-const connectionNames = {
-  online: '在线',
-  offline: '离线',
-  timeout: '通信超时',
-  simulation: '模拟模式',
-  checking: '检查中',
-  unknown: '未知',
-};
-
-const initialForm = {
-  packageId: '',
-  timestamp: toDateTimeLocal(),
-  deviceId: '',
-  className: '',
-  confidence: '0.80',
-  bboxX: '0.2',
-  bboxY: '0.2',
-  bboxWidth: '0.3',
-  bboxHeight: '0.3',
-  gasType: 'combustible',
-  concentration: '0',
-  unit: 'ppm',
-  gasAlarm: false,
-  trend: 'stable',
-  sensorStatus: 'online',
-};
-
-=======
 import { Link, useSearchParams } from 'react-router-dom';
 import { detectionApi } from '../api/detectionApi.js';
 import { deviceApi } from '../api/deviceApi.js';
@@ -107,7 +61,6 @@ function createInitialForm() {
   };
 }
 
->>>>>>> 9e129af (feat: add security machine HTTP image ingestion)
 const detectionErrorMessages = {
   NETWORK_ERROR: '无法连接后端服务，请确认 Express 服务已启动并检查网络连接。',
   IMAGE_REQUIRED: '真实 YOLO 检测必须先选择一张图片。',
@@ -146,22 +99,6 @@ function ServiceStatusCard({ title, tone, value, children, action }) {
   );
 }
 
-<<<<<<< HEAD
-function stepState(index, currentStep, failed) {
-  if (currentStep < 0) return 'pending';
-  if (failed) {
-    if (index < currentStep) return 'complete';
-    return index === currentStep ? 'error' : 'pending';
-  }
-  if (index < currentStep || currentStep === detectionSteps.length - 1) return 'complete';
-  return index === currentStep ? 'active' : 'pending';
-}
-
-export default function NewInspectionPage() {
-  const navigate = useNavigate();
-  const fileInputRef = useRef(null);
-  const [form, setForm] = useState(initialForm);
-=======
 function rawFrameText(frame) {
   if (typeof frame === 'string' && frame.trim()) return frame.trim();
   if (Array.isArray(frame) && frame.length) {
@@ -178,7 +115,6 @@ export default function NewInspectionPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const fileInputRef = useRef(null);
   const [form, setForm] = useState(createInitialForm);
->>>>>>> 9e129af (feat: add security machine HTTP image ingestion)
   const [devices, setDevices] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
@@ -195,13 +131,9 @@ export default function NewInspectionPage() {
   const [detectionStage, setDetectionStage] = useState(-1);
   const [detectionFailed, setDetectionFailed] = useState(false);
   const [detectionResult, setDetectionResult] = useState(null);
-<<<<<<< HEAD
-  const [clearingAlarm, setClearingAlarm] = useState(false);
-=======
   const [activeViewId, setActiveViewId] = useState(0);
   const [clearingAlarm, setClearingAlarm] = useState(false);
   const advancedOpen = searchParams.get('settings') === '1';
->>>>>>> 9e129af (feat: add security machine HTTP image ingestion)
 
   const loadServiceStatus = useCallback(async () => {
     setStatusLoading(true);
@@ -230,8 +162,6 @@ export default function NewInspectionPage() {
   useEffect(() => () => {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
   }, [previewUrl]);
-<<<<<<< HEAD
-=======
 
   useEffect(() => {
     if (!['local', 'security_machine'].includes(latestInspection?.imageSource)) return;
@@ -249,7 +179,6 @@ export default function NewInspectionPage() {
       ? '已接收真实安检仪 HTTP 图像并完成检测。'
       : '已从本地监听文件夹读取新图像并完成检测。');
   }, [latestInspection]);
->>>>>>> 9e129af (feat: add security machine HTTP image ingestion)
 
   const update = (name, value) => setForm((current) => ({ ...current, [name]: value }));
 
@@ -379,19 +308,10 @@ export default function NewInspectionPage() {
       });
       window.clearInterval(progressTimer);
       setDetectionResult(result);
-<<<<<<< HEAD
-      setDetectionStage(detectionSteps.length - 1);
-      const id = objectId(result?.inspection ?? result);
-      navigate(id ? `/inspections/${id}` : '/inspections', {
-        replace: true,
-        state: { created: true, smartDetection: true },
-      });
-=======
       setActiveViewId(0);
       setDetectionStage(detectionSteps.length - 1);
       setNotice('检测已完成，记录和关联报警已按后端规则保存。');
       await loadServiceStatus();
->>>>>>> 9e129af (feat: add security machine HTTP image ingestion)
     } catch (error) {
       setDetectionFailed(true);
       setServerError(readableError(error));
@@ -416,121 +336,6 @@ export default function NewInspectionPage() {
       setClearingAlarm(false);
     }
   };
-<<<<<<< HEAD
-
-  const yolo = serviceStatus?.yolo;
-  const gas = serviceStatus?.gas;
-  const database = serviceStatus?.database;
-  const yoloOnline = yolo?.status === 'online';
-  const yoloReady = yoloOnline && yolo?.modelLoaded;
-  const gasOnline = gas?.connectionStatus === 'online';
-  const databaseOnline = database?.connected === true;
-  const yoloTone = statusLoading && !yolo ? 'checking' : yoloReady ? 'online' : yoloOnline ? 'warning' : 'offline';
-  const gasTone = statusLoading && !gas ? 'checking' : gasOnline ? (gas?.alarm ? 'warning' : 'online') : 'offline';
-  const databaseTone = statusLoading && !database ? 'checking' : databaseOnline ? 'online' : 'offline';
-
-  return (
-    <div>
-      <PageHeader
-        title="智能检测"
-        description="上传安检图像，独立选择视觉与气体来源，并由后端完成融合判断和保存"
-        actions={<><button type="button" className="button button--secondary" onClick={loadServiceStatus} disabled={statusLoading}>{statusLoading && <Spinner small />}{statusLoading ? '检查中…' : '刷新服务状态'}</button><Link to="/inspections" className="button button--ghost">← 返回记录</Link></>}
-      />
-
-      <InlineNotice type="warning"><strong>辅助决策说明：</strong>真实或模拟检测结果均需由安检人员结合现场情况复核，系统结论不替代人工判断。</InlineNotice>
-      {statusError && <div className="form-error" role="alert"><span>!</span>{statusError}</div>}
-      {serverError && <div className="form-error" role="alert"><span>!</span>{serverError}</div>}
-      {notice && <div className="notice notice--success" role="status">{notice}<button type="button" onClick={() => setNotice('')}>×</button></div>}
-      {detectionResult && <div className="notice notice--success" role="status">检测已完成，正在打开结果详情。</div>}
-
-      <section className="panel integration-status-panel">
-        <div className="panel-header">
-          <div><h2>接入服务状态</h2><p>页面会每 15 秒刷新；服务离线时可在下方切换对应模拟模式</p></div>
-          <span className="panel-count">更新于 {formatDateTime(serviceStatus?.timestamp, statusLoading ? '检查中…' : '设备未提供')}</span>
-        </div>
-        <div className="service-status-grid">
-          <ServiceStatusCard title="YOLO 服务" tone={yoloTone} value={statusLoading && !yolo ? '检查中' : connectionNames[yolo?.status] || '离线'}>
-            <dl><div><dt>模型状态</dt><dd>{yolo?.modelLoaded ? '已加载' : '未加载'}</dd></div><div><dt>计算设备</dt><dd>{yolo?.device ? String(yolo.device).toUpperCase() : '设备未提供'}</dd></div></dl>
-            {yolo?.error && <p className="service-status-error">{yolo.error}</p>}
-          </ServiceStatusCard>
-          <ServiceStatusCard
-            title="气体通信"
-            tone={gasTone}
-            value={statusLoading && !gas ? '检查中' : connectionNames[gas?.connectionStatus] || '未知'}
-            action={gasOnline && <button type="button" className="button button--secondary button--small button--full" onClick={handleClearAlarm} disabled={clearingAlarm}>{clearingAlarm && <Spinner small />}{clearingAlarm ? '正在发送…' : gas?.alarm ? '解除当前报警' : '发送解除报警命令'}</button>}
-          >
-            <dl><div><dt>最后接收</dt><dd>{formatDateTime(gas?.lastReceivedAt, '设备未提供')}</dd></div><div><dt>通道</dt><dd>{Array.isArray(gas?.channels) && gas.channels.length ? `${gas.channels.filter((item) => item.connected).length}/${gas.channels.length} 在线` : '设备未提供'}</dd></div></dl>
-          </ServiceStatusCard>
-          <ServiceStatusCard title="MongoDB" tone={databaseTone} value={statusLoading && !database ? '检查中' : databaseOnline ? '正常' : '异常'}>
-            <dl><div><dt>连接状态</dt><dd>{connectionNames[database?.status] || database?.status || '设备未提供'}</dd></div><div><dt>记录保存</dt><dd>{databaseOnline ? '可用' : '不可用'}</dd></div></dl>
-          </ServiceStatusCard>
-        </div>
-      </section>
-
-      <form className="record-form" onSubmit={handleSubmit} noValidate>
-        <section className="panel form-section">
-          <div className="panel-header"><div><h2>基础信息</h2><p>包裹编号需要保持唯一</p></div></div>
-          <div className="form-grid form-grid--3">
-            <label className="field"><span>包裹编号 <em>*</em></span><input value={form.packageId} onChange={(event) => update('packageId', event.target.value)} placeholder="例如 PKG-20260714-001" disabled={submitting} />{errors.packageId && <small className="field-error">{errors.packageId}</small>}</label>
-            <label className="field"><span>检测时间 <em>*</em></span><input type="datetime-local" value={form.timestamp} onChange={(event) => update('timestamp', event.target.value)} disabled={submitting} />{errors.timestamp && <small className="field-error">{errors.timestamp}</small>}</label>
-            <label className="field"><span>关联设备</span><select value={form.deviceId} onChange={(event) => update('deviceId', event.target.value)} disabled={submitting}><option value="">不关联业务设备</option>{devices.map((device) => <option key={device._id} value={device._id}>{device.deviceName || device.deviceCode} · {device.location || '未设置位置'}</option>)}</select></label>
-          </div>
-        </section>
-
-        <section className="panel form-section">
-          <div className="panel-header"><div><h2>数据来源模式</h2><p>视觉和气体来源互不绑定，可按现场服务状态组合</p></div></div>
-          <div className="mode-grid">
-            <fieldset className="mode-group">
-              <legend>视觉数据</legend>
-              <label className={`mode-option${visionMode === 'real' ? ' mode-option--selected' : ''}`}><input type="radio" name="visionMode" value="real" checked={visionMode === 'real'} onChange={() => setVisionMode('real')} disabled={submitting} /><span><strong>YOLO 真实检测</strong><small>上传图片并调用本地 Python 模型服务</small></span></label>
-              <label className={`mode-option${visionMode === 'simulation' ? ' mode-option--selected' : ''}`}><input type="radio" name="visionMode" value="simulation" checked={visionMode === 'simulation'} onChange={() => setVisionMode('simulation')} disabled={submitting} /><span><strong>视觉模拟数据</strong><small>保留原有演示目标框录入能力</small></span></label>
-            </fieldset>
-            <fieldset className="mode-group">
-              <legend>气体数据</legend>
-              <label className={`mode-option${gasMode === 'device' ? ' mode-option--selected' : ''}`}><input type="radio" name="gasMode" value="device" checked={gasMode === 'device'} onChange={() => setGasMode('device')} disabled={submitting} /><span><strong>通信设备数据</strong><small>读取后端收到的最新气体通信帧</small></span></label>
-              <label className={`mode-option${gasMode === 'simulation' ? ' mode-option--selected' : ''}`}><input type="radio" name="gasMode" value="simulation" checked={gasMode === 'simulation'} onChange={() => setGasMode('simulation')} disabled={submitting} /><span><strong>气体模拟数据</strong><small>手动输入或随机生成演示数据</small></span></label>
-            </fieldset>
-          </div>
-          {!statusLoading && visionMode === 'real' && !yoloReady && <div className="mode-warning">YOLO 服务当前不可用或模型未加载；可切换“视觉模拟数据”继续演示。</div>}
-          {!statusLoading && gasMode === 'device' && !gasOnline && <div className="mode-warning">气体通信当前{gas?.connectionStatus === 'timeout' ? '已超时' : '离线'}；可切换“气体模拟数据”，或继续提交并由系统记录数据不完整。</div>}
-        </section>
-
-        <section className="panel form-section">
-          <div className="panel-header"><div><h2>{visionMode === 'real' ? '安检图像上传' : '视觉模拟检测'}</h2><p>{visionMode === 'real' ? '图片将交由 YOLO 服务执行目标检测' : '图片可选，并可录入一个模拟目标框'}</p></div></div>
-          <div className="upload-layout">
-            <div
-              className={`upload-box${previewUrl ? ' upload-box--preview' : ''}${dragActive ? ' upload-box--dragging' : ''}`}
-              role="button"
-              tabIndex={submitting ? -1 : 0}
-              aria-label={previewUrl ? '已选择图片' : '选择或拖拽安检图片'}
-              onClick={() => !submitting && !previewUrl && fileInputRef.current?.click()}
-              onKeyDown={(event) => { if (!submitting && !previewUrl && ['Enter', ' '].includes(event.key)) fileInputRef.current?.click(); }}
-              onDragEnter={(event) => { event.preventDefault(); if (!submitting) setDragActive(true); }}
-              onDragOver={(event) => event.preventDefault()}
-              onDragLeave={() => setDragActive(false)}
-              onDrop={handleDrop}
-            >
-              {previewUrl ? <><img src={previewUrl} alt="待检测安检图片预览" /><div className="upload-preview-actions"><button type="button" className="button button--secondary button--small" onClick={(event) => { event.stopPropagation(); if (fileInputRef.current) { fileInputRef.current.value = ''; fileInputRef.current.click(); } }} disabled={submitting}>重新选择</button><button type="button" className="button button--danger button--small" onClick={(event) => { event.stopPropagation(); clearImage(); }} disabled={submitting}>删除图片</button></div></> : <><span>▧</span><strong>点击选择或拖拽图片</strong><small>JPG / PNG / BMP / WebP，最大 5 MB</small></>}
-              <input ref={fileInputRef} className="upload-input" type="file" accept="image/jpeg,image/png,image/bmp,image/webp" onChange={(event) => selectImage(event.target.files?.[0])} disabled={submitting} />
-            </div>
-            <div className="upload-fields">
-              {selectedImage && <dl className="file-summary"><div><dt>文件名</dt><dd>{selectedImage.name}</dd></div><div><dt>大小</dt><dd>{(selectedImage.size / 1024 / 1024).toFixed(2)} MB</dd></div><div><dt>检测方式</dt><dd>{visionMode === 'real' ? 'YOLO 真实检测' : '视觉模拟数据'}</dd></div></dl>}
-              {errors.image && <small className="field-error">{errors.image}</small>}
-              {visionMode === 'simulation' && <>
-                <div className="form-grid form-grid--2">
-                  <label className="field"><span>目标类别</span><input value={form.className} onChange={(event) => update('className', event.target.value)} placeholder="例如 lighter；留空表示无目标" disabled={submitting} /></label>
-                  <label className="field"><span>置信度（0–1）</span><input type="number" min="0" max="1" step="0.01" value={form.confidence} onChange={(event) => update('confidence', event.target.value)} disabled={submitting} />{errors.confidence && <small className="field-error">{errors.confidence}</small>}</label>
-                </div>
-                <div className="bbox-grid">
-                  <label className="field"><span>X</span><input type="number" min="0" max="1" step="0.01" value={form.bboxX} onChange={(event) => update('bboxX', event.target.value)} disabled={submitting} /></label>
-                  <label className="field"><span>Y</span><input type="number" min="0" max="1" step="0.01" value={form.bboxY} onChange={(event) => update('bboxY', event.target.value)} disabled={submitting} /></label>
-                  <label className="field"><span>宽度</span><input type="number" min="0" max="1" step="0.01" value={form.bboxWidth} onChange={(event) => update('bboxWidth', event.target.value)} disabled={submitting} /></label>
-                  <label className="field"><span>高度</span><input type="number" min="0" max="1" step="0.01" value={form.bboxHeight} onChange={(event) => update('bboxHeight', event.target.value)} disabled={submitting} /></label>
-                </div>
-                {errors.bbox && <small className="field-error">{errors.bbox}</small>}
-              </>}
-              {visionMode === 'real' && !selectedImage && <div className="upload-hint"><strong>等待选择图片</strong><p>真实模式下图片为必填；模型离线时图片不会丢失，可直接切换视觉模拟模式。</p></div>}
-=======
 
   const closeAdvanced = () => {
     const next = new URLSearchParams(searchParams);
@@ -696,43 +501,10 @@ export default function NewInspectionPage() {
             <div className="risk-action-block"><span>建议处置</span><strong>{record?.reviewSuggestion || '完成检测后给出处置建议'}</strong><small>所有系统结论均需安检人员现场复核</small></div>
             <div className="risk-controls">
               {record ? <button type="button" className="button button--secondary" onClick={startNextInspection}>下一件包裹</button> : <button className="button button--primary button--large" type="submit" disabled={submitting}>{submitting && <Spinner small />}{submitting ? '智能检测进行中…' : '开始智能检测'}</button>}
->>>>>>> 9e129af (feat: add security machine HTTP image ingestion)
             </div>
           </div>
         </section>
 
-<<<<<<< HEAD
-        <section className="panel form-section">
-          <div className="panel-header"><div><h2>{gasMode === 'device' ? '气体通信数据' : '气体模拟数据'}</h2><p>{gasMode === 'device' ? '检测时读取后端收到的最新通信状态' : '报警、浓度与趋势应保持基本逻辑一致'}</p></div>{gasMode === 'simulation' && <button type="button" className="button button--secondary button--small" onClick={generateGasSimulation} disabled={submitting}>生成模拟气体数据</button>}</div>
-          {gasMode === 'device' ? (
-            <div className={`device-reading-summary device-reading-summary--${gasOnline ? 'online' : 'offline'}`}><span className="service-status-dot" /><div><strong>{connectionNames[gas?.connectionStatus] || '未知状态'}</strong><p>最后接收：{formatDateTime(gas?.lastReceivedAt, '设备未提供')} · 当前报警：{gas?.alarm ? `${gas.alarmLevel || 1} 级` : '未报警'}</p></div></div>
-          ) : (
-            <div className="form-grid form-grid--3">
-              <label className="field"><span>气体类型</span><input value={form.gasType} onChange={(event) => update('gasType', event.target.value)} disabled={submitting} />{errors.gasType && <small className="field-error">{errors.gasType}</small>}</label>
-              <label className="field"><span>浓度</span><input type="number" min="0" step="0.01" value={form.concentration} onChange={(event) => update('concentration', event.target.value)} disabled={submitting} />{errors.concentration && <small className="field-error">{errors.concentration}</small>}</label>
-              <label className="field"><span>单位</span><select value={form.unit} onChange={(event) => update('unit', event.target.value)} disabled={submitting}><option value="ppm">ppm</option><option value="mg/m³">mg/m³</option><option value="%LEL">%LEL</option></select></label>
-              <label className="field"><span>变化趋势</span><select value={form.trend} onChange={(event) => update('trend', event.target.value)} disabled={submitting}><option value="stable">稳定</option><option value="rising">上升</option><option value="falling">下降</option><option value="unknown">未知</option></select></label>
-              <label className="field"><span>传感器状态</span><select value={form.sensorStatus} onChange={(event) => update('sensorStatus', event.target.value)} disabled={submitting}><option value="online">正常在线</option><option value="calibrating">校准中</option><option value="offline">离线</option><option value="fault">故障</option></select></label>
-              <label className="checkbox checkbox--card"><input type="checkbox" checked={form.gasAlarm} onChange={(event) => update('gasAlarm', event.target.checked)} disabled={submitting} /><span><strong>气体报警</strong><small>表示模拟传感器已触发阈值</small></span></label>
-            </div>
-          )}
-        </section>
-
-        <section className="panel detection-progress-panel" aria-live="polite">
-          <div className="panel-header"><div><h2>检测阶段</h2><p>{detectionStage < 0 ? '准备就绪，点击开始后将显示处理进度' : detectionFailed ? '检测中断，请根据上方错误处理后重试' : detectionStage === detectionSteps.length - 1 ? '全部阶段已完成' : '请求处理中，请勿重复提交'}</p></div></div>
-          <ol className="detection-steps">
-            {detectionSteps.map(([title, description], index) => {
-              const state = stepState(index, detectionStage, detectionFailed);
-              return <li key={title} className={`detection-step detection-step--${state}`}><span>{state === 'complete' ? '✓' : state === 'error' ? '!' : index + 1}</span><div><strong>{title}</strong><small>{description}</small></div>{state === 'active' && <Spinner small />}</li>;
-            })}
-          </ol>
-        </section>
-
-        <section className="calculation-box">
-          <label className="checkbox"><input type="checkbox" checked readOnly /><span><strong>由服务端自动计算最终风险</strong><small>前端不会提交或覆盖 riskLevel、riskScore 和 riskReasons。</small></span></label>
-          <div className="form-submit"><Link className="button button--ghost" to="/inspections">取消</Link><button className="button button--primary button--large" type="submit" disabled={submitting}>{submitting && <Spinner small />}{submitting ? '智能检测进行中…' : '开始智能检测'}</button></div>
-        </section>
-=======
         {advancedOpen && <div className="settings-backdrop" role="presentation" onMouseDown={closeAdvanced}>
           <aside className="advanced-settings" role="dialog" aria-modal="true" aria-labelledby="advanced-settings-title" onMouseDown={(event) => event.stopPropagation()}>
             <header className="advanced-settings-header"><div><span>系统管理</span><h2 id="advanced-settings-title">高级设置</h2><p>服务详情、数据来源和调试参数</p></div><button type="button" className="settings-close" aria-label="关闭高级设置" onClick={closeAdvanced}>×</button></header>
@@ -755,7 +527,6 @@ export default function NewInspectionPage() {
             <section className="settings-section settings-risk-note"><label className="checkbox"><input type="checkbox" checked readOnly /><span><strong>由服务端自动计算最终风险</strong><small>前端不会提交或覆盖 riskLevel、riskScore 和 riskReasons。</small></span></label></section>
           </aside>
         </div>}
->>>>>>> 9e129af (feat: add security machine HTTP image ingestion)
       </form>
     </div>
   );

@@ -489,9 +489,6 @@ db.inspectionrecords.find({ riskLevel: "high" })
 - 独立 MongoDB 的补偿式降级不具备多文档事务原子性；
 - Docker 文件在当前开发机仅静态校对，尚未实际构建；
 - 真正上线还需要 HTTPS、密钥管理、MongoDB 认证/多节点、副本备份、监控、漏洞扫描和现场验收。
-<<<<<<< HEAD
-  
-=======
 
 ## 继续学习
 
@@ -501,7 +498,6 @@ db.inspectionrecords.find({ riskLevel: "high" })
 - [COURSE_CHECKLIST.md](./COURSE_CHECKLIST.md)：原有、本次新增、尚未实现和可选增强；
 - [REPOSITORY_AUDIT.md](./REPOSITORY_AUDIT.md)：项目开始时的仓库与外部实验资产审计；
 - [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md) / [PROGRESS.md](./PROGRESS.md)：阶段计划与每次实际验证结果。
->>>>>>> 9e129af (feat: add security machine HTTP image ingestion)
 
 ## 许可证与使用责任
 

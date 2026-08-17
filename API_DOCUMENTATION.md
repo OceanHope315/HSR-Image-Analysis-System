@@ -700,8 +700,6 @@ Invoke-RestMethod -Uri 'http://localhost:5000/api/v1/inspections?riskLevel=high&
 - `POST /api/v1/gas/clear-alarm`：`admin/inspector`，向在线 TCP 设备发送解除报警命令。
 
 常见新增错误码：`YOLO_SERVICE_OFFLINE`、`YOLO_SERVICE_TIMEOUT`、`YOLO_MODEL_NOT_LOADED`、`GAS_DEVICE_OFFLINE`、`GAS_COMMAND_FAILED`、`DATABASE_UNAVAILABLE`、`DUPLICATE_IMAGE`、`DETECTION_IN_PROGRESS`。
-<<<<<<< HEAD
-=======
 
 ## 安检仪推图接口（开发阶段）
 
@@ -711,4 +709,3 @@ Invoke-RestMethod -Uri 'http://localhost:5000/api/v1/inspections?riskLevel=high&
 - `img0/img1` 兼容 raw Base64 与 data URI；两者至少提供一个。
 - 返回字段：`resCode`、`imgID`、`resMsg0`、`resMsg1`、`errorMsg`。
 - `resMsg0/resMsg1` 当前为开发用对象数组，真实设备精确序列化格式尚待联调确认。
->>>>>>> 9e129af (feat: add security machine HTTP image ingestion)

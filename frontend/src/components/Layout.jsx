@@ -91,13 +91,8 @@ export default function Layout() {
           ))}
         </nav>
         <div className="sidebar-foot">
-<<<<<<< HEAD
-          <div className="simulation-label"><span>HYBRID</span> 真实 / 模拟双模式</div>
-          <p>支持模型与气体通信接入；所有结论仍需由安检人员现场复核。</p>
-=======
           <div className="simulation-label"><span>LIVE</span> 实时融合监测</div>
           <p>原有运行总览、报警和设备页面已收进高级设置，路由与数据均保留。</p>
->>>>>>> 9e129af (feat: add security machine HTTP image ingestion)
         </div>
       </aside>
 
@@ -120,14 +115,6 @@ export default function Layout() {
           <time className="topbar-clock" dateTime={clock.toISOString()}>{currentTime}</time>
         </header>
 
-<<<<<<< HEAD
-        <div className="simulation-banner">
-          <strong>运行提示</strong>
-          检测可使用真实服务或模拟数据；无论来源如何，所有风险结论均需由安检人员复核。
-        </div>
-
-=======
->>>>>>> 9e129af (feat: add security machine HTTP image ingestion)
         <main className="content"><Outlet /></main>
       </div>
 

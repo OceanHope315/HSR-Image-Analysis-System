@@ -18,10 +18,6 @@ const deviceStatusMap = {
   warning: '告警',
   maintenance: '维护中',
 };
-<<<<<<< HEAD
-const roleMap = { admin: '管理员', inspector: '安检员', viewer: '只读人员' };
-=======
->>>>>>> 9e129af (feat: add security machine HTTP image ingestion)
 const detectionClassMap = {
   gun: '枪支',
   firearm: '枪支',
@@ -94,12 +90,6 @@ export function alarmStatusLabel(value) {
 
 export function deviceStatusLabel(value) {
   return deviceStatusMap[value] ?? value ?? '—';
-}
-
-export function detectionClassLabel(value, fallback = '未知类别') {
-  if (value === null || value === undefined || value === '') return fallback;
-  const normalized = String(value).trim().toLowerCase();
-  return detectionClassMap[normalized] ?? String(value);
 }
 
 export function detectionClassLabel(value, fallback = '未知类别') {
